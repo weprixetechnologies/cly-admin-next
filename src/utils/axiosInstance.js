@@ -12,7 +12,7 @@ const redirectToLogin = () => {
 };
 
 const axiosInstance = axios.create({
-    baseURL: 'http://192.168.1.9:3300/api',
+    baseURL: 'https://cly-backend.onrender.com/api',
     headers: { 'Content-Type': 'application/json' },
 });
 
