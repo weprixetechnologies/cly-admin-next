@@ -37,7 +37,8 @@ export default function AllOrders() {
                 setOrders([]);
                 setPagination({ page: 1, limit: 10, total: 0, totalPages: 0 });
             } else {
-                setOrders(data.data || []);
+                const list = (data.data || []).slice().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+                setOrders(list);
                 setPagination(data.pagination || { page: 1, limit: 10, total: 0, totalPages: 0 });
             }
         } catch (e) {
@@ -53,6 +54,7 @@ export default function AllOrders() {
             return;
         }
         fetchOrders();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [router, filters]);
 
     const handleFilterChange = (key, value) => {
@@ -61,6 +63,10 @@ export default function AllOrders() {
 
     const handlePageChange = (newPage) => {
         fetchOrders(newPage);
+    };
+
+    const fmt = (d) => {
+        try { return new Date(d).toLocaleString(); } catch { return d || '-'; }
     };
 
     if (isLoading) {
@@ -83,12 +89,10 @@ export default function AllOrders() {
             </header>
 
             <main className="p-6">
-                <div className="bg-white rounded-lg shadow p-6">
+                <div className="bg-white rounded-xl shadow border border-gray-100 p-6">
                     <div className="flex justify-between items-center mb-6">
-                        <h2 className="text-lg font-medium text-gray-900">All Orders</h2>
-                        <div className="text-sm text-gray-600">
-                            Total: {pagination.total} orders
-                        </div>
+                        <h2 className="text-lg font-semibold text-gray-900">All Orders</h2>
+                        <div className="text-sm text-gray-600">Total: {pagination.total} orders</div>
                     </div>
 
                     {/* Filters */}
@@ -149,21 +153,23 @@ export default function AllOrders() {
                         </div>
                     </div>
 
-                    <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-gray-200">
-                            <thead className="bg-gray-50">
+                    <div className="overflow-x-auto rounded-lg border border-gray-100">
+                        <table className="min-w-full divide-y divide-gray-100">
+                            <thead className="bg-gray-50/80">
                                 <tr>
-                                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Order ID</th>
-                                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">User</th>
-                                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Items</th>
-                                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Payment</th>
-                                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Status</th>
-                                    <th className="px-4 py-2 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">Actions</th>
+                                    <th className="px-4 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Date</th>
+                                    <th className="px-4 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Order ID</th>
+                                    <th className="px-4 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">User</th>
+                                    <th className="px-4 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Items</th>
+                                    <th className="px-4 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Payment</th>
+                                    <th className="px-4 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Status</th>
+                                    <th className="px-4 py-2 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody className="bg-white divide-y divide-gray-200">
+                            <tbody className="bg-white divide-y divide-gray-100">
                                 {orders.map(o => (
                                     <tr key={o.orderID} className="hover:bg-gray-50">
+                                        <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{fmt(o.createdAt)}</td>
                                         <td className="px-4 py-2 font-mono text-sm text-gray-900">{o.orderID}</td>
                                         <td className="px-4 py-2 text-sm text-gray-900">{o.uid}</td>
                                         <td className="px-4 py-2 text-sm text-gray-900">{o.items}</td>
@@ -178,7 +184,7 @@ export default function AllOrders() {
                                 ))}
                                 {orders.length === 0 && (
                                     <tr>
-                                        <td colSpan={6} className="px-4 py-6 text-center text-gray-700">No orders found.</td>
+                                        <td colSpan={7} className="px-4 py-6 text-center text-gray-700">No orders found.</td>
                                     </tr>
                                 )}
                             </tbody>

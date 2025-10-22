@@ -31,7 +31,7 @@ export default function LoginPage() {
         setIsLoading(true);
 
         try {
-            const response = await fetch('https://cly-backend.onrender.com/api/auth/login/admin', {
+            const response = await fetch('http://localhost:3300/api/auth/login/admin', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

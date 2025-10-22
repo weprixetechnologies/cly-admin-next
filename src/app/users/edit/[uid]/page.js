@@ -117,10 +117,10 @@ export default function EditUser() {
 
         try {
             // Bunny CDN configuration (same as products)
-            const storageZone = 'cly-images';
-            const storageRegion = 'storage.bunnycdn.com'; // ✅ Correct region
-            const pullZoneUrl = 'https://cly-pull.b-cdn.net';
-            const apiKey = 'b4381f39-9ab4-4c9f-989f88a76c2f-809a-4c75';
+            const storageZone = 'ithyaraa';
+            const storageRegion = 'sg.storage.bunnycdn.com';
+            const pullZoneUrl = 'https://ithyaraa.b-cdn.net';
+            const apiKey = '7017f7c4-638b-48ab-add3858172a8-f520-4b88'; // ⚠️ Dev only
 
             // Upload function (exactly like products)
             const uploadToBunny = async (file) => {
