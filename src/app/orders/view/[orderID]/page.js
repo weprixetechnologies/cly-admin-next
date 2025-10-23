@@ -78,9 +78,8 @@ export default function OrderDetails({ params }) {
                 'Product ID': item.productID,
                 'Product Name': item.productName,
                 'Box Qty': item.boxQty || 0,
-                'Pack Qty': item.packQty || 0,
                 'Units': item.units || 0,
-                'Total Qty': (item.units || 0) + (item.packQty || 0) + (item.boxQty || 0),
+                'Total Qty': (item.units || 0) + (item.boxQty || 0),
                 'Created At': item.createdAt ? new Date(item.createdAt).toLocaleString() : '-'
             }))
 
@@ -121,7 +120,7 @@ export default function OrderDetails({ params }) {
         )
     }
 
-    const totalItems = orderItems.reduce((sum, it) => sum + (it.units || 0) + (it.packQty || 0) + (it.boxQty || 0), 0)
+    const totalItems = orderItems.reduce((sum, it) => sum + (it.units || 0) + (it.boxQty || 0), 0)
 
     return (
         <>
@@ -216,7 +215,6 @@ export default function OrderDetails({ params }) {
                                     <th className="px-4 py-2 text-left text-xs font-semibold text-gray-800 uppercase tracking-wider">Product</th>
                                     <th className="px-4 py-2 text-left text-xs font-semibold text-gray-800 uppercase tracking-wider">Product ID</th>
                                     <th className="px-4 py-2 text-left text-xs font-semibold text-gray-800 uppercase tracking-wider">Box</th>
-                                    <th className="px-4 py-2 text-left text-xs font-semibold text-gray-800 uppercase tracking-wider">Pack</th>
                                     <th className="px-4 py-2 text-left text-xs font-semibold text-gray-800 uppercase tracking-wider">Units</th>
                                     <th className="px-4 py-2 text-left text-xs font-semibold text-gray-800 uppercase tracking-wider">Created</th>
                                 </tr>
@@ -230,7 +228,6 @@ export default function OrderDetails({ params }) {
                                         </td>
                                         <td className="px-4 py-2 text-xs font-mono text-gray-800">{it.productID}</td>
                                         <td className="px-4 py-2 text-sm text-gray-900">{it.boxQty}</td>
-                                        <td className="px-4 py-2 text-sm text-gray-900">{it.packQty}</td>
                                         <td className="px-4 py-2 text-sm text-gray-900">{it.units}</td>
                                         <td className="px-4 py-2 text-sm text-gray-900">{it.createdAt ? new Date(it.createdAt).toLocaleString() : '-'}</td>
                                     </tr>

@@ -12,7 +12,6 @@ export default function EditProduct() {
         sku: '',
         description: '',
         boxQty: '',
-        packQty: '',
         minQty: '1',
         categoryID: '',
         categoryName: '',
@@ -57,7 +56,6 @@ export default function EditProduct() {
                     sku: product.sku || '',
                     description: product.description || '',
                     boxQty: product.boxQty || '',
-                    packQty: product.packQty || '',
                     minQty: product.minQty || '1',
                     categoryID: product.categoryID || '',
                     categoryName: product.categoryName || '',
@@ -195,7 +193,6 @@ export default function EditProduct() {
                 sku: formData.sku,
                 description: formData.description,
                 boxQty: formData.boxQty,
-                packQty: formData.packQty,
                 minQty: formData.minQty,
                 categoryID: formData.categoryID,
                 categoryName: formData.categoryName,
@@ -384,21 +381,6 @@ export default function EditProduct() {
                                 />
                             </div>
 
-                            <div>
-                                <label htmlFor="packQty" className="block text-sm font-medium text-slate-700 mb-2">
-                                    Pack Quantity
-                                </label>
-                                <input
-                                    type="number"
-                                    id="packQty"
-                                    name="packQty"
-                                    value={formData.packQty}
-                                    onChange={handleInputChange}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                                    placeholder="0"
-                                    min="0"
-                                />
-                            </div>
 
                             <div>
                                 <label htmlFor="minQty" className="block text-sm font-medium text-slate-700 mb-2">

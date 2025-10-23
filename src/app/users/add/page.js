@@ -126,7 +126,7 @@ export default function AddUser() {
                                     name="username"
                                     value={formData.username}
                                     onChange={handleInputChange}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none placeholder-[#c0c0c0]"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none placeholder-[#c0c0c0] text-black text-black"
                                     placeholder="Enter username"
                                     required
                                 />
@@ -142,7 +142,7 @@ export default function AddUser() {
                                     name="name"
                                     value={formData.name}
                                     onChange={handleInputChange}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none placeholder-[#c0c0c0]"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none placeholder-[#c0c0c0] text-black"
                                     placeholder="Enter full name"
                                     required
                                 />
@@ -158,7 +158,7 @@ export default function AddUser() {
                                     name="emailID"
                                     value={formData.emailID}
                                     onChange={handleInputChange}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none placeholder-[#c0c0c0]"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none placeholder-[#c0c0c0] text-black"
                                     placeholder="Enter email address"
                                     required
                                 />
@@ -174,7 +174,7 @@ export default function AddUser() {
                                     name="phoneNumber"
                                     value={formData.phoneNumber}
                                     onChange={handleInputChange}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none placeholder-[#c0c0c0]"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none placeholder-[#c0c0c0] text-black"
                                     placeholder="Enter phone number"
                                 />
                             </div>
@@ -189,7 +189,7 @@ export default function AddUser() {
                                     name="gstin"
                                     value={formData.gstin}
                                     onChange={handleInputChange}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none placeholder-[#c0c0c0]"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none placeholder-[#c0c0c0] text-black"
                                     placeholder="Enter GSTIN number"
                                 />
                             </div>
@@ -242,7 +242,7 @@ export default function AddUser() {
                                         name="password"
                                         value={formData.password}
                                         onChange={handleInputChange}
-                                        className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none placeholder-[#c0c0c0]"
+                                        className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none placeholder-[#c0c0c0] text-black"
                                         placeholder="Enter password"
                                         required
                                     />
@@ -276,7 +276,7 @@ export default function AddUser() {
                                         name="confirmPassword"
                                         value={formData.confirmPassword}
                                         onChange={handleInputChange}
-                                        className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none placeholder-[#c0c0c0]"
+                                        className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none placeholder-[#c0c0c0] text-black"
                                         placeholder="Confirm password"
                                         required
                                     />
