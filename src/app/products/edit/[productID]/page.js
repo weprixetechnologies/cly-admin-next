@@ -291,7 +291,7 @@ export default function EditProduct() {
                                     name="productName"
                                     value={formData.productName}
                                     onChange={handleInputChange}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 text-black focus:border-transparent outline-none"
                                     placeholder="Enter product name"
                                     required
                                 />
@@ -307,7 +307,7 @@ export default function EditProduct() {
                                     name="productPrice"
                                     value={formData.productPrice}
                                     onChange={handleInputChange}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 text-black focus:border-transparent outline-none"
                                     placeholder="0.00"
                                     step="0.01"
                                     min="0"
@@ -325,7 +325,7 @@ export default function EditProduct() {
                                     name="sku"
                                     value={formData.sku}
                                     onChange={handleInputChange}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 text-black focus:border-transparent outline-none"
                                     placeholder="Enter SKU"
                                 />
                             </div>
@@ -339,7 +339,7 @@ export default function EditProduct() {
                                     name="status"
                                     value={formData.status}
                                     onChange={handleInputChange}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 text-black focus:border-transparent outline-none"
                                 >
                                     <option value="active">Active</option>
                                     <option value="inactive">Inactive</option>
@@ -358,7 +358,7 @@ export default function EditProduct() {
                                 value={formData.description}
                                 onChange={handleInputChange}
                                 rows={4}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 text-black focus:border-transparent outline-none"
                                 placeholder="Enter product description"
                             />
                         </div>
@@ -375,7 +375,7 @@ export default function EditProduct() {
                                     name="boxQty"
                                     value={formData.boxQty}
                                     onChange={handleInputChange}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 text-black focus:border-transparent outline-none"
                                     placeholder="0"
                                     min="0"
                                 />
@@ -392,7 +392,7 @@ export default function EditProduct() {
                                     name="minQty"
                                     value={formData.minQty}
                                     onChange={handleInputChange}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 text-black focus:border-transparent outline-none"
                                     placeholder="1"
                                     min="1"
                                 />
@@ -417,7 +417,7 @@ export default function EditProduct() {
                                             categoryName: selectedCategory ? selectedCategory.categoryName : ''
                                         }));
                                     }}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 text-black focus:border-transparent outline-none"
                                 >
                                     <option value="">Select a category</option>
                                     {categories.map(category => (
@@ -438,7 +438,7 @@ export default function EditProduct() {
                                     name="inventory"
                                     value={formData.inventory}
                                     onChange={handleInputChange}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 text-black focus:border-transparent outline-none"
                                     placeholder="0"
                                     min="0"
                                 />
@@ -467,7 +467,7 @@ export default function EditProduct() {
                                     id="featuredImage"
                                     accept="image/*"
                                     onChange={handleFeaturedImageChange}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 text-black focus:border-transparent outline-none"
                                 />
                                 {featuredImage && (
                                     <p className="text-sm text-green-600 mt-1">New image selected: {featuredImage.name}</p>
@@ -538,7 +538,7 @@ export default function EditProduct() {
                                         multiple
                                         accept="image/*"
                                         onChange={handleGalleryImagesChange}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 text-black focus:border-transparent outline-none"
                                     />
                                     <p className="text-xs text-gray-500 mt-1">
                                         Add more images (max 5 total)
@@ -565,14 +565,14 @@ export default function EditProduct() {
                             <button
                                 type="button"
                                 onClick={() => router.push('/products/list')}
-                                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 text-black focus:border-transparent"
                             >
                                 Cancel
                             </button>
                             <button
                                 type="submit"
                                 disabled={isLoading}
-                                className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-blue-400"
+                                className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 text-black focus:border-transparent disabled:bg-blue-400"
                             >
                                 {isLoading ? 'Updating Product...' : 'Update Product'}
                             </button>
