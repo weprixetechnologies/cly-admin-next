@@ -77,9 +77,9 @@ export default function OrderDetails({ params }) {
                 'S.No': index + 1,
                 'Product ID': item.productID,
                 'Product Name': item.productName,
-                'Box Qty': item.boxQty || 0,
+                'Box Qty': item.boxes || 0,
                 'Units': item.units || 0,
-                'Total Qty': (item.units || 0) + (item.boxQty || 0),
+                'Total Qty': (item.units || 0) + (item.boxes || 0),
                 'Created At': item.createdAt ? new Date(item.createdAt).toLocaleString() : '-'
             }))
 
@@ -120,7 +120,7 @@ export default function OrderDetails({ params }) {
         )
     }
 
-    const totalItems = orderItems.reduce((sum, it) => sum + (it.units || 0) + (it.boxQty || 0), 0)
+    const totalItems = orderItems.reduce((sum, it) => sum + (it.units || 0) + (it.boxes || 0), 0)
 
     return (
         <>
@@ -227,7 +227,7 @@ export default function OrderDetails({ params }) {
                                             <span className="font-medium text-gray-900">{it.productName}</span>
                                         </td>
                                         <td className="px-4 py-2 text-xs font-mono text-gray-800">{it.productID}</td>
-                                        <td className="px-4 py-2 text-sm text-gray-900">{it.boxQty}</td>
+                                        <td className="px-4 py-2 text-sm text-gray-900">{it.boxes}</td>
                                         <td className="px-4 py-2 text-sm text-gray-900">{it.units}</td>
                                         <td className="px-4 py-2 text-sm text-gray-900">{it.createdAt ? new Date(it.createdAt).toLocaleString() : '-'}</td>
                                     </tr>
