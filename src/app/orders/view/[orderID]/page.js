@@ -174,8 +174,9 @@ export default function OrderDetails({ params }) {
                             <div className="font-medium text-gray-900 break-all">{orderID}</div>
                         </div>
                         <div>
-                            <div className="text-gray-700">User UID</div>
-                            <div className="font-medium text-gray-900">{orderItems[0]?.uid || '-'}</div>
+                            <div className="text-gray-700">Customer</div>
+                            <div className="font-medium text-gray-900">{orderItems[0]?.userName || 'Unknown User'}</div>
+                            <div className="text-sm text-gray-500">{orderItems[0]?.uid || '-'}</div>
                         </div>
                         <div>
                             <div className="text-gray-700">Status</div>
@@ -192,6 +193,10 @@ export default function OrderDetails({ params }) {
                         <div>
                             <div className="text-gray-700">Items</div>
                             <div className="font-medium text-gray-900">{totalItems}</div>
+                        </div>
+                        <div>
+                            <div className="text-gray-700">Subtotal</div>
+                            <div className="font-medium text-gray-900">₹{orderItems[0]?.order_amount || '0.00'}</div>
                         </div>
                         <div>
                             <div className="text-gray-700">Payment Mode</div>
@@ -282,6 +287,22 @@ export default function OrderDetails({ params }) {
                         </div>
                     </div>
                 )}
+
+                {/* Order Summary */}
+                <div className="bg-white rounded-lg shadow">
+                    <div className="p-6 border-b">
+                        <h2 className="text-lg font-semibold text-gray-900">Order Summary</h2>
+                    </div>
+                    <div className="p-6">
+                        <div className="flex justify-between items-center text-lg font-semibold">
+                            <span className="text-gray-700">Total Amount:</span>
+                            <span className="text-green-600">₹{orderItems[0]?.order_amount || '0.00'}</span>
+                        </div>
+                        <div className="mt-2 text-sm text-gray-500">
+                            Amount calculated based on product prices and quantities
+                        </div>
+                    </div>
+                </div>
 
                 {/* Raw data viewer so every column is visible */}
                 <div className="bg-white rounded-lg shadow">

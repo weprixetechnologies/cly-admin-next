@@ -142,6 +142,7 @@ export default function RejectedOrders() {
                                     <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Order ID</th>
                                     <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">User</th>
                                     <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Items</th>
+                                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Amount</th>
                                     <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Payment</th>
                                     <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Status</th>
                                     <th className="px-4 py-2 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">Actions</th>
@@ -151,8 +152,12 @@ export default function RejectedOrders() {
                                 {orders.map(o => (
                                     <tr key={o.orderID} className="hover:bg-gray-50">
                                         <td className="px-4 py-2 font-mono text-sm">{o.orderID}</td>
-                                        <td className="px-4 py-2 text-sm text-gray-900">{o.uid}</td>
+                                        <td className="px-4 py-2 text-sm text-gray-900">
+                                            <div className="font-medium">{o.userName || 'Unknown User'}</div>
+                                            <div className="text-xs text-gray-500">{o.uid}</div>
+                                        </td>
                                         <td className="px-4 py-2 text-sm text-gray-900">{o.items}</td>
+                                        <td className="px-4 py-2 text-sm text-gray-900 font-semibold">₹{o.order_amount || '0.00'}</td>
                                         <td className="px-4 py-2 text-sm text-gray-900">{o.paymentMode || '-'}</td>
                                         <td className="px-4 py-2">
                                             <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">rejected</span>
@@ -164,7 +169,7 @@ export default function RejectedOrders() {
                                 ))}
                                 {orders.length === 0 && (
                                     <tr>
-                                        <td colSpan={6} className="px-4 py-6 text-center text-gray-700">No orders found.</td>
+                                        <td colSpan={7} className="px-4 py-6 text-center text-gray-700">No orders found.</td>
                                     </tr>
                                 )}
                             </tbody>
@@ -195,8 +200,8 @@ export default function RejectedOrders() {
                                             key={pageNum}
                                             onClick={() => handlePageChange(pageNum)}
                                             className={`px-3 py-2 text-sm border rounded-md ${pageNum === pagination.page
-                                                    ? 'bg-blue-600 text-white border-blue-600'
-                                                    : 'border-gray-300 hover:bg-gray-50'
+                                                ? 'bg-blue-600 text-white border-blue-600'
+                                                : 'border-gray-300 hover:bg-gray-50'
                                                 }`}
                                         >
                                             {pageNum}
