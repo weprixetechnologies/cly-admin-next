@@ -42,7 +42,7 @@ const LayoutWrapper = ({ children }) => {
             <Sidebar />
 
             {/* Main Content Area */}
-            <div className="flex-1 ml-64">
+            <div className="flex-1 ml-64 w-0 min-w-0 overflow-hidden">
                 {children}
             </div>
         </div>

@@ -74,7 +74,7 @@ export default function AcceptedOrders() {
     }
 
     return (
-        <>
+        <div className="min-h-screen">
             <header className="bg-white shadow-sm border-b">
                 <div className="px-6 py-4">
                     <h1 className="text-2xl font-bold text-gray-800">Accepted Orders</h1>
@@ -135,13 +135,14 @@ export default function AcceptedOrders() {
                         </div>
                     </div>
 
-                    <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-gray-200">
+                    <div className="overflow-x-auto w-full">
+                        <table className="divide-y divide-gray-200" style={{ width: '1000px' }}>
                             <thead className="bg-gray-50">
                                 <tr>
                                     <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Order ID</th>
                                     <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">User</th>
                                     <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Items</th>
+                                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Requested/Accepted</th>
                                     <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Amount</th>
                                     <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Payment</th>
                                     <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Status</th>
@@ -157,6 +158,14 @@ export default function AcceptedOrders() {
                                             <div className="text-xs text-gray-500">{o.uid}</div>
                                         </td>
                                         <td className="px-4 py-2 text-sm text-gray-900">{o.items}</td>
+                                        <td className="px-4 py-2 text-sm text-gray-900">
+                                            <div className="text-xs">
+                                                <div>Req: {o.total_requested || 0}</div>
+                                                <div className={o.total_accepted < o.total_requested ? 'text-yellow-600' : 'text-green-600'}>
+                                                    Acc: {o.total_accepted || 0}
+                                                </div>
+                                            </div>
+                                        </td>
                                         <td className="px-4 py-2 text-sm text-gray-900 font-semibold">₹{o.order_amount || '0.00'}</td>
                                         <td className="px-4 py-2 text-sm text-gray-900">{o.paymentMode || '-'}</td>
                                         <td className="px-4 py-2">
@@ -169,7 +178,7 @@ export default function AcceptedOrders() {
                                 ))}
                                 {orders.length === 0 && (
                                     <tr>
-                                        <td colSpan={7} className="px-4 py-6 text-center text-gray-700">No orders found.</td>
+                                        <td colSpan={8} className="px-4 py-6 text-center text-gray-700">No orders found.</td>
                                     </tr>
                                 )}
                             </tbody>
@@ -221,6 +230,6 @@ export default function AcceptedOrders() {
                     )}
                 </div>
             </main>
-        </>
+        </div>
     );
 }
