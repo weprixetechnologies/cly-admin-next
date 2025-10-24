@@ -9,12 +9,14 @@ export default function EditUser() {
     const [user, setUser] = useState(null);
     const [formData, setFormData] = useState({
         name: '',
+        emailID: '',
         phoneNumber: '',
         gstin: '',
-        outstanding: '',
+        outstanding: 0,
         status: 'active',
         role: 'user',
-        photo: ''
+        photo: '',
+        approval_status: 'pending'
     });
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
@@ -23,6 +25,8 @@ export default function EditUser() {
     const [success, setSuccess] = useState('');
     const [selectedFile, setSelectedFile] = useState(null);
     const [photoPreview, setPhotoPreview] = useState(null);
+    const [userOrders, setUserOrders] = useState([]);
+    const [ordersLoading, setOrdersLoading] = useState(false);
     const { isAuthenticated } = useAuth();
     const router = useRouter();
     const params = useParams();
@@ -30,6 +34,7 @@ export default function EditUser() {
     useEffect(() => {
         if (isAuthenticated && params.uid) {
             fetchUser();
+            fetchUserOrders();
         }
     }, [isAuthenticated, params.uid]);
 
@@ -43,26 +48,42 @@ export default function EditUser() {
     const fetchUser = async () => {
         try {
             setIsLoading(true);
-            const response = await axiosInstance.get(`/users/${params.uid}`);
-            const userData = response.data.user;
+            const response = await axiosInstance.get(`/admin/users/${params.uid}`);
+            const userData = response.data.data;
             console.log('=== INITIAL USER DATA ===');
             console.log('User data from backend:', userData);
             console.log('Photo URL from backend:', userData.photo);
             setUser(userData);
             setFormData({
                 name: userData.name || '',
+                emailID: userData.emailID || '',
                 phoneNumber: userData.phoneNumber || '',
                 gstin: userData.gstin || '',
-                outstanding: userData.outstanding || '',
+                outstanding: userData.outstanding || 0,
                 status: userData.status || 'active',
                 role: userData.role || 'user',
-                photo: userData.photo || ''
+                photo: userData.photo || '',
+                approval_status: userData.approval_status || 'pending'
             });
         } catch (error) {
             console.error('Error fetching user:', error);
             setError('Failed to load user data');
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    const fetchUserOrders = async () => {
+        try {
+            setOrdersLoading(true);
+            const response = await axiosInstance.get(`/admin/users/${params.uid}/orders`);
+            if (response.data.success) {
+                setUserOrders(response.data.data || []);
+            }
+        } catch (error) {
+            console.error('Error fetching user orders:', error);
+        } finally {
+            setOrdersLoading(false);
         }
     };
 
@@ -148,7 +169,7 @@ export default function EditUser() {
             console.log('Upload successful! Public URL:', publicUrl);
 
             // Update user profile with photo URL
-            const response = await axiosInstance.put(`/users/${params.uid}`, {
+            const response = await axiosInstance.put(`/admin/users/${params.uid}`, {
                 photo: publicUrl
             });
 
@@ -158,7 +179,7 @@ export default function EditUser() {
                     ...prev,
                     photo: publicUrl
                 }));
-                
+
                 setUser(prev => ({
                     ...prev,
                     photo: publicUrl
@@ -185,14 +206,50 @@ export default function EditUser() {
         setError('');
         setSuccess('');
 
+        // Check authentication status
+        console.log('Authentication status:', isAuthenticated);
+        console.log('User data:', user);
+
         try {
-            await axiosInstance.put(`/users/${params.uid}`, formData);
+            console.log('Sending form data:', formData);
+            console.log('Request URL:', `/admin/users/${params.uid}`);
+            console.log('Axios instance base URL:', axiosInstance.defaults.baseURL);
+            console.log('Axios instance headers:', axiosInstance.defaults.headers);
+
+            const response = await axiosInstance.put(`/admin/users/${params.uid}`, formData);
+            console.log('Response received:', response);
             setSuccess('User updated successfully!');
             setTimeout(() => {
                 router.push('/users/all');
             }, 2000);
         } catch (error) {
-            setError(error.response?.data?.message || 'Failed to update user');
+            console.error('Full error object:', error);
+            console.error('Error type:', typeof error);
+            console.error('Error constructor:', error.constructor.name);
+            console.error('Error keys:', Object.keys(error));
+            console.error('Error message:', error.message);
+            console.error('Error stack:', error.stack);
+            console.error('Error response:', error.response);
+            console.error('Error config:', error.config);
+            console.error('Error request:', error.request);
+
+            let errorMessage = 'Failed to update user';
+
+            if (error.code === 'NETWORK_ERROR' || error.message === 'Network Error') {
+                errorMessage = 'Network error. Please check if the server is running.';
+            } else if (error.code === 'ECONNREFUSED') {
+                errorMessage = 'Cannot connect to server. Please check if the backend is running.';
+            } else if (error.response?.data?.message) {
+                errorMessage = error.response.data.message;
+            } else if (error.message) {
+                errorMessage = error.message;
+            } else if (error.response?.status) {
+                errorMessage = `Request failed with status ${error.response.status}`;
+            } else {
+                errorMessage = `Unknown error: ${JSON.stringify(error)}`;
+            }
+
+            setError(errorMessage);
         } finally {
             setIsSaving(false);
         }
@@ -265,7 +322,7 @@ export default function EditUser() {
                     <form onSubmit={handleSubmit} className="p-6 space-y-6">
                         {/* User Info Display */}
                         <div className="bg-slate-50 p-4 rounded-md border border-slate-200">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <div>
                                     <label className="block text-sm font-medium text-slate-700 mb-1">Username</label>
                                     <div className="text-sm text-slate-800 bg-slate-50 px-3 py-2 border border-slate-300 rounded-md font-medium">
@@ -278,6 +335,22 @@ export default function EditUser() {
                                         {user.emailID}
                                     </div>
                                     <p className="text-xs text-slate-500 mt-1">Email cannot be changed</p>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">Current Approval Status</label>
+                                    <div className="flex items-center space-x-2">
+                                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${user.approval_status === 'approved' ? 'bg-green-100 text-green-800' :
+                                            user.approval_status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                                'bg-red-100 text-red-800'
+                                            }`}>
+                                            {user.approval_status}
+                                        </span>
+                                        {user.approved_by && (
+                                            <span className="text-xs text-slate-500">
+                                                by {user.approved_by}
+                                            </span>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -421,7 +494,7 @@ export default function EditUser() {
                                     type="number"
                                     id="outstanding"
                                     name="outstanding"
-                                    value={formData.outstanding}
+                                    value={formData.outstanding || 0}
                                     onChange={handleInputChange}
                                     className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-slate-800 placeholder-slate-500"
                                     placeholder="Enter outstanding amount"
@@ -463,6 +536,26 @@ export default function EditUser() {
                                     <option value="banned" className="text-slate-800">Banned</option>
                                 </select>
                             </div>
+
+                            <div>
+                                <label htmlFor="approval_status" className="block text-sm font-medium text-slate-700 mb-2">
+                                    Approval Status
+                                </label>
+                                <select
+                                    id="approval_status"
+                                    name="approval_status"
+                                    value={formData.approval_status}
+                                    onChange={handleInputChange}
+                                    className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-slate-800 bg-white"
+                                >
+                                    <option value="pending" className="text-slate-800">Pending</option>
+                                    <option value="approved" className="text-slate-800">Approved</option>
+                                    <option value="rejected" className="text-slate-800">Rejected</option>
+                                </select>
+                                <p className="text-xs text-slate-500 mt-1">
+                                    Controls whether the user can log in to the system
+                                </p>
+                            </div>
                         </div>
 
                         {/* Error and Success Messages */}
@@ -496,6 +589,110 @@ export default function EditUser() {
                             </button>
                         </div>
                     </form>
+                </div>
+
+                {/* User Orders Section */}
+                <div className="bg-white rounded-lg shadow mt-6">
+                    <div className="px-6 py-4 border-b border-gray-200">
+                        <h2 className="text-lg font-medium text-gray-900">User Orders</h2>
+                        <p className="text-sm text-slate-600">All orders placed by this user</p>
+                    </div>
+
+                    {ordersLoading ? (
+                        <div className="p-6 text-center">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                            <p className="mt-2 text-gray-600">Loading orders...</p>
+                        </div>
+                    ) : userOrders.length === 0 ? (
+                        <div className="p-6 text-center">
+                            <div className="text-gray-400 text-4xl mb-2">📦</div>
+                            <h3 className="text-lg font-medium text-gray-900 mb-2">No Orders</h3>
+                            <p className="text-gray-500">This user hasn't placed any orders yet.</p>
+                        </div>
+                    ) : (
+                        <div className="p-6 overflow-x-auto">
+                            <table className="min-w-full divide-y divide-gray-200">
+                                <thead className="bg-gray-50">
+                                    <tr>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Order ID
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Date
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Status
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Payment
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Items
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Amount
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Actions
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody className="bg-white divide-y divide-gray-200">
+                                    {userOrders.map((order) => (
+                                        <tr key={order.orderID} className="hover:bg-gray-50">
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <div className="text-sm font-medium text-gray-900">
+                                                    {order.orderID}
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                {new Date(order.createdAt).toLocaleDateString()}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${order.orderStatus === 'accepted' ? 'bg-green-100 text-green-800' :
+                                                    order.orderStatus === 'rejected' ? 'bg-red-100 text-red-800' :
+                                                        'bg-yellow-100 text-yellow-800'
+                                                    }`}>
+                                                    {order.orderStatus}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <div className="flex flex-col space-y-1">
+                                                    <span className="text-sm text-gray-900">{order.paymentMode}</span>
+                                                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${order.payment_status === 'paid'
+                                                            ? 'bg-green-100 text-green-800'
+                                                            : order.payment_status === 'partially_paid'
+                                                                ? 'bg-yellow-100 text-yellow-800'
+                                                                : 'bg-red-100 text-red-800'
+                                                        }`}>
+                                                        {order.payment_status === 'paid'
+                                                            ? 'PAID'
+                                                            : order.payment_status === 'partially_paid'
+                                                                ? 'PARTIALLY PAID'
+                                                                : 'NOT PAID'}
+                                                    </span>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                {order.items} items
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                                ₹{order.order_amount || '0.00'}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                                <button
+                                                    onClick={() => router.push(`/orders/view/${order.orderID}`)}
+                                                    className="text-blue-600 hover:text-blue-900"
+                                                >
+                                                    View
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
                 </div>
             </main>
         </>
