@@ -9,6 +9,7 @@ export default function AllOrders() {
     const [isLoading, setIsLoading] = useState(true);
     const [orders, setOrders] = useState([]);
     const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0, totalPages: 0 });
+    const [statistics, setStatistics] = useState(null);
     const [filters, setFilters] = useState({
         search: '',
         status: 'all',
@@ -48,12 +49,31 @@ export default function AllOrders() {
         }
     };
 
+    const fetchStatistics = async () => {
+        try {
+            const params = new URLSearchParams({
+                status: filters.status,
+                paymentMode: filters.paymentMode,
+                dateFrom: filters.dateFrom,
+                dateTo: filters.dateTo
+            });
+
+            const { data } = await axios.get(`/order/admin/statistics?${params}`);
+            if (data.success) {
+                setStatistics(data.data);
+            }
+        } catch (e) {
+            console.error('[AllOrders] Statistics fetch failed:', e);
+        }
+    };
+
     useEffect(() => {
         if (!isAuthenticated()) {
             router.push('/login');
             return;
         }
         fetchOrders();
+        fetchStatistics();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [router, filters]);
 
@@ -89,6 +109,143 @@ export default function AllOrders() {
             </header>
 
             <main className="p-6 w-full">
+                {/* Statistics Dashboard */}
+                {statistics && (
+                    <div className="mb-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        {/* Total Orders */}
+                        <div className="bg-white p-6 rounded-xl shadow border border-gray-100">
+                            <div className="flex items-center">
+                                <div className="p-3 bg-blue-100 rounded-lg">
+                                    <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                                    </svg>
+                                </div>
+                                <div className="ml-4">
+                                    <p className="text-sm font-medium text-gray-600">Total Orders</p>
+                                    <p className="text-2xl font-bold text-gray-900">{statistics.overview.totalOrders}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Total Amount */}
+                        <div className="bg-white p-6 rounded-xl shadow border border-gray-100">
+                            <div className="flex items-center">
+                                <div className="p-3 bg-green-100 rounded-lg">
+                                    <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                                    </svg>
+                                </div>
+                                <div className="ml-4">
+                                    <p className="text-sm font-medium text-gray-600">Total Amount</p>
+                                    <p className="text-2xl font-bold text-gray-900">₹{statistics.overview.totalAmount.toLocaleString()}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Pending Amount */}
+                        <div className="bg-white p-6 rounded-xl shadow border border-gray-100">
+                            <div className="flex items-center">
+                                <div className="p-3 bg-yellow-100 rounded-lg">
+                                    <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </div>
+                                <div className="ml-4">
+                                    <p className="text-sm font-medium text-gray-600">Pending Amount</p>
+                                    <p className="text-2xl font-bold text-gray-900">₹{statistics.overview.pendingAmount.toLocaleString()}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Paid Amount */}
+                        <div className="bg-white p-6 rounded-xl shadow border border-gray-100">
+                            <div className="flex items-center">
+                                <div className="p-3 bg-emerald-100 rounded-lg">
+                                    <svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </div>
+                                <div className="ml-4">
+                                    <p className="text-sm font-medium text-gray-600">Paid Amount</p>
+                                    <p className="text-2xl font-bold text-gray-900">₹{statistics.overview.paidAmount.toLocaleString()}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Additional Statistics Row */}
+                {statistics && (
+                    <div className="mb-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        {/* Average Order Value */}
+                        <div className="bg-white p-6 rounded-xl shadow border border-gray-100">
+                            <div className="flex items-center">
+                                <div className="p-3 bg-purple-100 rounded-lg">
+                                    <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                    </svg>
+                                </div>
+                                <div className="ml-4">
+                                    <p className="text-sm font-medium text-gray-600">Avg Order Value</p>
+                                    <p className="text-2xl font-bold text-gray-900">₹{statistics.overview.averageOrderValue.toLocaleString()}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Recent Orders */}
+                        <div className="bg-white p-6 rounded-xl shadow border border-gray-100">
+                            <div className="flex items-center">
+                                <div className="p-3 bg-indigo-100 rounded-lg">
+                                    <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                                    </svg>
+                                </div>
+                                <div className="ml-4">
+                                    <p className="text-sm font-medium text-gray-600">Recent Orders (7d)</p>
+                                    <p className="text-2xl font-bold text-gray-900">{statistics.overview.recentOrders}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Partially Paid */}
+                        <div className="bg-white p-6 rounded-xl shadow border border-gray-100">
+                            <div className="flex items-center">
+                                <div className="p-3 bg-orange-100 rounded-lg">
+                                    <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </div>
+                                <div className="ml-4">
+                                    <p className="text-sm font-medium text-gray-600">Partially Paid</p>
+                                    <p className="text-2xl font-bold text-gray-900">₹{statistics.overview.partiallyPaidAmount.toLocaleString()}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Status Breakdown */}
+                        <div className="bg-white p-6 rounded-xl shadow border border-gray-100">
+                            <div className="flex items-center">
+                                <div className="p-3 bg-pink-100 rounded-lg">
+                                    <svg className="w-6 h-6 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                    </svg>
+                                </div>
+                                <div className="ml-4">
+                                    <p className="text-sm font-medium text-gray-600">Status Breakdown</p>
+                                    <div className="text-xs text-gray-500 space-y-1">
+                                        {Object.entries(statistics.statusBreakdown).map(([status, data]) => (
+                                            <div key={status} className="flex justify-between">
+                                                <span className="capitalize">{status}:</span>
+                                                <span className="font-medium">{data.count}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 <div className="bg-white rounded-xl shadow border border-gray-100 p-6 w-full">
                     <div className="flex justify-between items-center mb-6">
                         <h2 className="text-lg font-semibold text-gray-900">All Orders</h2>

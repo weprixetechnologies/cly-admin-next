@@ -25,6 +25,9 @@ export default function OrderDetails({ params }) {
     const [paidAmount, setPaidAmount] = useState(0)
     const [paymentNotes, setPaymentNotes] = useState('')
     const [savingPayment, setSavingPayment] = useState(false)
+    const [editingRemarks, setEditingRemarks] = useState(false)
+    const [remarks, setRemarks] = useState('')
+    const [savingRemarks, setSavingRemarks] = useState(false)
 
     useEffect(() => {
         const fetchOrder = async () => {
@@ -33,7 +36,10 @@ export default function OrderDetails({ params }) {
                 const rows = data?.data || []
                 console.log('[OrderDetails] rows from orders table:', rows)
                 setOrderItems(rows)
-                if (rows.length > 0) setOrderStatus(rows[0].orderStatus || 'pending')
+                if (rows.length > 0) {
+                    setOrderStatus(rows[0].orderStatus || 'pending')
+                    setRemarks(rows[0].remarks || '')
+                }
 
                 // Fetch order payment data
                 const paymentResponse = await axios.get(`/order/admin/${orderID}/payment`)
@@ -68,7 +74,7 @@ export default function OrderDetails({ params }) {
     const updatePartialAcceptance = async (productID) => {
         try {
             setSaving(true)
-            const accepted = acceptedUnits[productID] || 0
+            const accepted = acceptedUnits[productID] === '' ? 0 : (acceptedUnits[productID] || 0)
             const notes = adminNotes[productID] || ''
 
             const { data } = await axios.put(`/order/admin/acceptance`, {
@@ -127,7 +133,7 @@ export default function OrderDetails({ params }) {
     const handleAcceptanceChange = (productID, value) => {
         setAcceptedUnits(prev => ({
             ...prev,
-            [productID]: parseInt(value) || 0
+            [productID]: value === '' ? '' : parseInt(value) || 0
         }))
     }
 
@@ -156,14 +162,15 @@ export default function OrderDetails({ params }) {
         try {
             setSavingPayment(true)
             const totalOrderAmount = parseFloat(orderItems[0]?.order_amount || 0)
+            const paymentAmount = paidAmount === '' ? 0 : paidAmount
 
-            if (paidAmount > totalOrderAmount) {
+            if (paymentAmount > totalOrderAmount) {
                 alert('Paid amount cannot exceed total order amount')
                 return
             }
 
             const { data } = await axios.put(`/order/admin/${orderID}/payment`, {
-                paidAmount: paidAmount,
+                paidAmount: paymentAmount,
                 notes: paymentNotes
             })
 
@@ -188,6 +195,36 @@ export default function OrderDetails({ params }) {
             alert('Failed to update order payment. Please try again.')
         } finally {
             setSavingPayment(false)
+        }
+    }
+
+    const updateOrderRemarks = async () => {
+        try {
+            setSavingRemarks(true)
+
+            const { data } = await axios.put(`/order/admin/${orderID}/remarks`, {
+                remarks: remarks
+            })
+
+            if (data?.success) {
+                // Refresh order data
+                const { data: orderData } = await axios.get(`/order/admin/${orderID}`)
+                setOrderItems(orderData?.data || [])
+                if (orderData?.data?.length > 0) {
+                    setRemarks(orderData.data[0].remarks || '')
+                }
+
+                setEditingRemarks(false)
+                alert('Order remarks updated successfully')
+            } else {
+                console.error('[UpdateOrderRemarks] API error:', data.message)
+                alert('Failed to update order remarks: ' + data.message)
+            }
+        } catch (e) {
+            console.error(e)
+            alert('Failed to update order remarks. Please try again.')
+        } finally {
+            setSavingRemarks(false)
         }
     }
 
@@ -633,7 +670,7 @@ export default function OrderDetails({ params }) {
                                                     type="number"
                                                     min="0"
                                                     max={it.requested_units || it.units || 0}
-                                                    value={acceptedUnits[it.productID] || it.accepted_units || 0}
+                                                    value={acceptedUnits[it.productID] !== undefined ? acceptedUnits[it.productID] : (it.accepted_units || 0)}
                                                     onChange={(e) => handleAcceptanceChange(it.productID, e.target.value)}
                                                     className="w-20 px-2 py-1 border rounded text-sm"
                                                 />
@@ -756,8 +793,8 @@ export default function OrderDetails({ params }) {
                                             min="0"
                                             max={getTotalOrderAmount()}
                                             step="0.01"
-                                            value={paidAmount}
-                                            onChange={(e) => setPaidAmount(parseFloat(e.target.value) || 0)}
+                                            value={paidAmount === '' ? '' : paidAmount}
+                                            onChange={(e) => setPaidAmount(e.target.value === '' ? '' : parseFloat(e.target.value) || 0)}
                                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                             placeholder="0.00"
                                         />
@@ -831,6 +868,60 @@ export default function OrderDetails({ params }) {
                                         </div>
                                     ))}
                                 </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* Order Remarks Section */}
+                <div className="bg-white rounded-lg shadow">
+                    <div className="p-6 border-b">
+                        <h2 className="text-lg font-semibold text-gray-900">Order Remarks</h2>
+                    </div>
+                    <div className="p-6">
+                        {editingRemarks ? (
+                            <div className="space-y-4">
+                                <textarea
+                                    value={remarks}
+                                    onChange={(e) => setRemarks(e.target.value)}
+                                    placeholder="Add remarks for this order..."
+                                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    rows={4}
+                                />
+                                <div className="flex gap-3">
+                                    <button
+                                        onClick={updateOrderRemarks}
+                                        disabled={savingRemarks}
+                                        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+                                    >
+                                        {savingRemarks ? 'Saving...' : 'Save Remarks'}
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            setEditingRemarks(false)
+                                            setRemarks(orderItems[0]?.remarks || '')
+                                        }}
+                                        className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600"
+                                    >
+                                        Cancel
+                                    </button>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="space-y-4">
+                                <div className="min-h-[100px] p-4 bg-gray-50 rounded-lg">
+                                    {remarks ? (
+                                        <p className="text-gray-800 whitespace-pre-wrap">{remarks}</p>
+                                    ) : (
+                                        <p className="text-gray-500 italic">No remarks added yet</p>
+                                    )}
+                                </div>
+                                <button
+                                    onClick={() => setEditingRemarks(true)}
+                                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                                >
+                                    {remarks ? 'Edit Remarks' : 'Add Remarks'}
+                                </button>
                             </div>
                         )}
                     </div>

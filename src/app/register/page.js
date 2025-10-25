@@ -22,10 +22,20 @@ export default function RegisterPage() {
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: value
-        }));
+
+        // For phone number, only allow digits and limit to 10 characters
+        if (name === 'phone') {
+            const numericValue = value.replace(/\D/g, '').slice(0, 10);
+            setFormData(prev => ({
+                ...prev,
+                [name]: numericValue
+            }));
+        } else {
+            setFormData(prev => ({
+                ...prev,
+                [name]: value
+            }));
+        }
         setError('');
         setSuccess('');
     };
@@ -43,6 +53,13 @@ export default function RegisterPage() {
 
         if (formData.password.length < 6) {
             setError('Password must be at least 6 characters long');
+            return;
+        }
+
+        // Mobile number validation - must be exactly 10 digits
+        const phoneRegex = /^[0-9]{10}$/;
+        if (!phoneRegex.test(formData.phone)) {
+            setError('Phone number must be exactly 10 digits');
             return;
         }
 

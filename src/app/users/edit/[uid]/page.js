@@ -27,6 +27,13 @@ export default function EditUser() {
     const [photoPreview, setPhotoPreview] = useState(null);
     const [userOrders, setUserOrders] = useState([]);
     const [ordersLoading, setOrdersLoading] = useState(false);
+    const [userStatistics, setUserStatistics] = useState({
+        totalOrders: 0,
+        totalOutstanding: 0,
+        totalPaid: 0,
+        remainingBalance: 0
+    });
+    const [statisticsLoading, setStatisticsLoading] = useState(false);
     const { isAuthenticated } = useAuth();
     const router = useRouter();
     const params = useParams();
@@ -35,6 +42,7 @@ export default function EditUser() {
         if (isAuthenticated && params.uid) {
             fetchUser();
             fetchUserOrders();
+            fetchUserStatistics();
         }
     }, [isAuthenticated, params.uid]);
 
@@ -84,6 +92,25 @@ export default function EditUser() {
             console.error('Error fetching user orders:', error);
         } finally {
             setOrdersLoading(false);
+        }
+    };
+
+    const fetchUserStatistics = async () => {
+        try {
+            setStatisticsLoading(true);
+            const response = await axiosInstance.get(`/admin/users/${params.uid}/statistics`);
+            if (response.data.success) {
+                setUserStatistics(response.data.data || {
+                    totalOrders: 0,
+                    totalOutstanding: 0,
+                    totalPaid: 0,
+                    remainingBalance: 0
+                });
+            }
+        } catch (error) {
+            console.error('Error fetching user statistics:', error);
+        } finally {
+            setStatisticsLoading(false);
         }
     };
 
@@ -313,6 +340,79 @@ export default function EditUser() {
             </header>
 
             <main className="p-6">
+                {/* User Statistics Cards */}
+                <div className="mb-6">
+                    <h2 className="text-lg font-medium text-gray-900 mb-4">User Statistics</h2>
+                    {statisticsLoading ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                            {[1, 2, 3, 4].map((i) => (
+                                <div key={i} className="bg-white rounded-lg shadow p-6 animate-pulse">
+                                    <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                                    <div className="h-8 bg-gray-200 rounded w-1/2"></div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <div className="bg-white rounded-lg shadow p-6 border-l-4 border-blue-500">
+                                <div className="flex items-center">
+                                    <div className="flex-shrink-0">
+                                        <svg className="h-8 w-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                        </svg>
+                                    </div>
+                                    <div className="ml-4">
+                                        <p className="text-sm font-medium text-gray-500">Total Orders</p>
+                                        <p className="text-2xl font-semibold text-gray-900">{userStatistics.totalOrders}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="bg-white rounded-lg shadow p-6 border-l-4 border-yellow-500">
+                                <div className="flex items-center">
+                                    <div className="flex-shrink-0">
+                                        <svg className="h-8 w-8 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                                        </svg>
+                                    </div>
+                                    <div className="ml-4">
+                                        <p className="text-sm font-medium text-gray-500">Total Outstanding</p>
+                                        <p className="text-2xl font-semibold text-gray-900">₹{userStatistics.totalOutstanding.toFixed(2)}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="bg-white rounded-lg shadow p-6 border-l-4 border-green-500">
+                                <div className="flex items-center">
+                                    <div className="flex-shrink-0">
+                                        <svg className="h-8 w-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                    </div>
+                                    <div className="ml-4">
+                                        <p className="text-sm font-medium text-gray-500">Total Paid</p>
+                                        <p className="text-2xl font-semibold text-gray-900">₹{userStatistics.totalPaid.toFixed(2)}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="bg-white rounded-lg shadow p-6 border-l-4 border-red-500">
+                                <div className="flex items-center">
+                                    <div className="flex-shrink-0">
+                                        <svg className="h-8 w-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                                        </svg>
+                                    </div>
+                                    <div className="ml-4">
+                                        <p className="text-sm font-medium text-gray-500">Remaining Balance</p>
+                                        <p className="text-2xl font-semibold text-gray-900">₹{userStatistics.remainingBalance.toFixed(2)}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+
                 <div className="bg-white rounded-lg shadow">
                     <div className="px-6 py-4 border-b border-gray-200">
                         <h2 className="text-lg font-medium text-gray-900">User Information</h2>
@@ -660,10 +760,10 @@ export default function EditUser() {
                                                 <div className="flex flex-col space-y-1">
                                                     <span className="text-sm text-gray-900">{order.paymentMode}</span>
                                                     <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${order.payment_status === 'paid'
-                                                            ? 'bg-green-100 text-green-800'
-                                                            : order.payment_status === 'partially_paid'
-                                                                ? 'bg-yellow-100 text-yellow-800'
-                                                                : 'bg-red-100 text-red-800'
+                                                        ? 'bg-green-100 text-green-800'
+                                                        : order.payment_status === 'partially_paid'
+                                                            ? 'bg-yellow-100 text-yellow-800'
+                                                            : 'bg-red-100 text-red-800'
                                                         }`}>
                                                         {order.payment_status === 'paid'
                                                             ? 'PAID'
