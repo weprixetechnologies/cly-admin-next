@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import * as XLSX from 'xlsx'
 import jsPDF from 'jspdf'
 import html2canvas from 'html2canvas'
+import InvoiceViewer from '../../../../components/InvoiceViewer'
 
 export default function OrderDetails({ params }) {
     const router = useRouter()
@@ -28,6 +29,7 @@ export default function OrderDetails({ params }) {
     const [editingRemarks, setEditingRemarks] = useState(false)
     const [remarks, setRemarks] = useState('')
     const [savingRemarks, setSavingRemarks] = useState(false)
+    const [showInvoice, setShowInvoice] = useState(false)
 
     useEffect(() => {
         const fetchOrder = async () => {
@@ -519,6 +521,13 @@ export default function OrderDetails({ params }) {
                             )}
                         </button>
                         <button
+                            onClick={() => setShowInvoice(true)}
+                            disabled={orderItems.length === 0}
+                            className="px-4 py-2 text-sm rounded border bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 flex items-center gap-2"
+                        >
+                            📄 Generate Invoice
+                        </button>
+                        <button
                             onClick={generateInvoicePDF}
                             disabled={generatingPDF || orderItems.length === 0}
                             className="px-4 py-2 text-sm rounded border bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 flex items-center gap-2"
@@ -530,7 +539,7 @@ export default function OrderDetails({ params }) {
                                 </>
                             ) : (
                                 <>
-                                    📄 Download Invoice
+                                    📄 Download PDF
                                 </>
                             )}
                         </button>
@@ -1022,6 +1031,14 @@ export default function OrderDetails({ params }) {
                     <p className="mt-2 text-sm text-gray-700">Force mode enabled. Use the buttons above to change status again.</p>
                 )}
             </div>
+
+            {/* Invoice Viewer Modal */}
+            {showInvoice && (
+                <InvoiceViewer
+                    orderID={orderID}
+                    onClose={() => setShowInvoice(false)}
+                />
+            )}
         </>
     )
 }
