@@ -396,8 +396,8 @@ export default function OrderDetails({ params }) {
                     yPosition = 30
                 }
 
-                const quantity = Number(item.requested_units || item.units || 0)
-                const price = Number(item.productPrice || 0)
+                const quantity = Number(item.accepted_units || item.requested_units || item.units || 0)
+                const price = Number(item.pItemPrice || item.productPrice || 0)
                 const total = quantity * price
                 grandTotal += total
 
@@ -482,7 +482,7 @@ export default function OrderDetails({ params }) {
         )
     }
 
-    const totalItems = orderItems.reduce((sum, it) => sum + (it.units || 0), 0)
+    const totalItems = orderItems.reduce((sum, it) => sum + (it.accepted_units || it.units || 0), 0)
 
     return (
         <>
@@ -696,8 +696,8 @@ export default function OrderDetails({ params }) {
                                             </span>
                                         </td>
                                         <td className="px-4 py-2 text-sm text-gray-900">
-                                            <div className="font-medium">₹{((it.productPrice || 0) * (it.units || 0)).toFixed(2)}</div>
-                                            <div className="text-xs text-gray-500">₹{it.productPrice || '0.00'} × {it.units || 0}</div>
+                                            <div className="font-medium">₹{((it.pItemPrice || it.productPrice || 0) * (it.accepted_units || it.units || 0)).toFixed(2)}</div>
+                                            <div className="text-xs text-gray-500">₹{it.pItemPrice || it.productPrice || '0.00'} × {(it.accepted_units || it.units || 0)}</div>
                                         </td>
                                         <td className="px-4 py-2 text-sm">
                                             {editingItem === it.productID ? (
