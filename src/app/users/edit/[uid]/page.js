@@ -28,10 +28,9 @@ export default function EditUser() {
     const [userOrders, setUserOrders] = useState([]);
     const [ordersLoading, setOrdersLoading] = useState(false);
     const [userStatistics, setUserStatistics] = useState({
-        totalOrders: 0,
-        totalOutstanding: 0,
+        totalOrdersAmount: 0,
         totalPaid: 0,
-        remainingBalance: 0
+        remainingAmount: 0
     });
     const [statisticsLoading, setStatisticsLoading] = useState(false);
     const { isAuthenticated } = useAuth();
@@ -353,7 +352,7 @@ export default function EditUser() {
                             ))}
                         </div>
                     ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div className="bg-white rounded-lg shadow p-6 border-l-4 border-blue-500">
                                 <div className="flex items-center">
                                     <div className="flex-shrink-0">
@@ -362,22 +361,8 @@ export default function EditUser() {
                                         </svg>
                                     </div>
                                     <div className="ml-4">
-                                        <p className="text-sm font-medium text-gray-500">Total Orders</p>
-                                        <p className="text-2xl font-semibold text-gray-900">{userStatistics.totalOrders}</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="bg-white rounded-lg shadow p-6 border-l-4 border-yellow-500">
-                                <div className="flex items-center">
-                                    <div className="flex-shrink-0">
-                                        <svg className="h-8 w-8 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                                        </svg>
-                                    </div>
-                                    <div className="ml-4">
-                                        <p className="text-sm font-medium text-gray-500">Total Outstanding</p>
-                                        <p className="text-2xl font-semibold text-gray-900">₹{userStatistics.totalOutstanding.toFixed(2)}</p>
+                                        <p className="text-sm font-medium text-gray-500">Total Orders Amount</p>
+                                        <p className="text-2xl font-semibold text-gray-900">₹{userStatistics.totalOrdersAmount.toFixed(2)}</p>
                                     </div>
                                 </div>
                             </div>
@@ -404,8 +389,8 @@ export default function EditUser() {
                                         </svg>
                                     </div>
                                     <div className="ml-4">
-                                        <p className="text-sm font-medium text-gray-500">Remaining Balance</p>
-                                        <p className="text-2xl font-semibold text-gray-900">₹{userStatistics.remainingBalance.toFixed(2)}</p>
+                                        <p className="text-sm font-medium text-gray-500">Remaining Amount</p>
+                                        <p className="text-2xl font-semibold text-gray-900">₹{userStatistics.remainingAmount.toFixed(2)}</p>
                                     </div>
                                 </div>
                             </div>

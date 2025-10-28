@@ -30,6 +30,10 @@ export default function OrderDetails({ params }) {
     const [remarks, setRemarks] = useState('')
     const [savingRemarks, setSavingRemarks] = useState(false)
     const [showInvoice, setShowInvoice] = useState(false)
+    const [editingPaymentId, setEditingPaymentId] = useState(null)
+    const [editPaymentAmount, setEditPaymentAmount] = useState('')
+    const [editPaymentNotes, setEditPaymentNotes] = useState('')
+    const [savingPaymentEdit, setSavingPaymentEdit] = useState(false)
 
     useEffect(() => {
         const fetchOrder = async () => {
@@ -228,6 +232,78 @@ export default function OrderDetails({ params }) {
         } finally {
             setSavingRemarks(false)
         }
+    }
+
+    const updatePaymentEntry = async (paymentId) => {
+        try {
+            setSavingPaymentEdit(true)
+
+            const { data } = await axios.put(`/order/admin/${orderID}/payment/${paymentId}`, {
+                paidAmount: parseFloat(editPaymentAmount),
+                notes: editPaymentNotes
+            })
+
+            if (data?.success) {
+                // Refresh order and payment data
+                const { data: orderData } = await axios.get(`/order/admin/${orderID}`)
+                setOrderItems(orderData?.data || [])
+
+                const paymentResponse = await axios.get(`/order/admin/${orderID}/payment`)
+                setOrderPayment(paymentResponse.data?.data || [])
+
+                setEditingPaymentId(null)
+                setEditPaymentAmount('')
+                setEditPaymentNotes('')
+                alert('Payment entry updated successfully')
+            } else {
+                console.error('[UpdatePaymentEntry] API error:', data.message)
+                alert('Failed to update payment entry: ' + data.message)
+            }
+        } catch (e) {
+            console.error(e)
+            alert('Failed to update payment entry. Please try again.')
+        } finally {
+            setSavingPaymentEdit(false)
+        }
+    }
+
+    const deletePaymentEntry = async (paymentId) => {
+        if (!confirm('Are you sure you want to delete this payment entry? This action cannot be undone.')) {
+            return
+        }
+
+        try {
+            const { data } = await axios.delete(`/order/admin/${orderID}/payment/${paymentId}`)
+
+            if (data?.success) {
+                // Refresh order and payment data
+                const { data: orderData } = await axios.get(`/order/admin/${orderID}`)
+                setOrderItems(orderData?.data || [])
+
+                const paymentResponse = await axios.get(`/order/admin/${orderID}/payment`)
+                setOrderPayment(paymentResponse.data?.data || [])
+
+                alert('Payment entry deleted successfully')
+            } else {
+                console.error('[DeletePaymentEntry] API error:', data.message)
+                alert('Failed to delete payment entry: ' + data.message)
+            }
+        } catch (e) {
+            console.error(e)
+            alert('Failed to delete payment entry. Please try again.')
+        }
+    }
+
+    const startEditingPayment = (payment) => {
+        setEditingPaymentId(payment.id)
+        setEditPaymentAmount(payment.paid_amount.toString())
+        setEditPaymentNotes(payment.notes || '')
+    }
+
+    const cancelEditingPayment = () => {
+        setEditingPaymentId(null)
+        setEditPaymentAmount('')
+        setEditPaymentNotes('')
     }
 
     const getTotalPaidAmount = () => {
@@ -861,19 +937,83 @@ export default function OrderDetails({ params }) {
                                 <h3 className="text-lg font-medium text-gray-900 mb-4">Payment History</h3>
                                 <div className="space-y-3">
                                     {orderPayment.map((payment, index) => (
-                                        <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                                            <div>
-                                                <div className="font-medium text-gray-900">₹{payment.paid_amount}</div>
-                                                <div className="text-sm text-gray-500">
-                                                    {new Date(payment.createdAt).toLocaleString()}
+                                        <div key={payment.id || index} className="p-3 bg-gray-50 rounded-lg">
+                                            {editingPaymentId === payment.id ? (
+                                                // Edit mode
+                                                <div className="space-y-3">
+                                                    <div className="grid grid-cols-2 gap-3">
+                                                        <div>
+                                                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                                Amount
+                                                            </label>
+                                                            <input
+                                                                type="number"
+                                                                min="0"
+                                                                step="0.01"
+                                                                value={editPaymentAmount}
+                                                                onChange={(e) => setEditPaymentAmount(e.target.value)}
+                                                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                                            />
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                                Notes
+                                                            </label>
+                                                            <input
+                                                                type="text"
+                                                                value={editPaymentNotes}
+                                                                onChange={(e) => setEditPaymentNotes(e.target.value)}
+                                                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex gap-2">
+                                                        <button
+                                                            onClick={() => updatePaymentEntry(payment.id)}
+                                                            disabled={savingPaymentEdit}
+                                                            className="px-3 py-1 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 text-sm"
+                                                        >
+                                                            {savingPaymentEdit ? 'Saving...' : 'Save'}
+                                                        </button>
+                                                        <button
+                                                            onClick={cancelEditingPayment}
+                                                            className="px-3 py-1 bg-gray-500 text-white rounded-md hover:bg-gray-600 text-sm"
+                                                        >
+                                                            Cancel
+                                                        </button>
+                                                    </div>
                                                 </div>
-                                                {payment.notes && (
-                                                    <div className="text-sm text-gray-600 mt-1">{payment.notes}</div>
-                                                )}
-                                            </div>
-                                            <div className="text-sm text-gray-500">
-                                                Admin: {payment.admin_uid}
-                                            </div>
+                                            ) : (
+                                                // View mode
+                                                <div className="flex justify-between items-center">
+                                                    <div className="flex-1">
+                                                        <div className="font-medium text-gray-900">₹{payment.paid_amount}</div>
+                                                        <div className="text-sm text-gray-500">
+                                                            {new Date(payment.createdAt).toLocaleString()}
+                                                        </div>
+                                                        {payment.notes && (
+                                                            <div className="text-sm text-gray-600 mt-1">{payment.notes}</div>
+                                                        )}
+                                                        <div className="text-sm text-gray-500 mt-1">
+                                                            Admin: {payment.admin_uid}
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex gap-2">
+                                                        <button
+                                                            onClick={() => startEditingPayment(payment)}
+                                                            className="px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm"
+                                                        >
+                                                            Edit
+                                                        </button>
+                                                        <button
+                                                            onClick={() => deletePaymentEntry(payment.id)}
+                                                            className="px-3 py-1 bg-red-600 text-white rounded-md hover:bg-red-700 text-sm"
+                                                        >
+                                                            Delete
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
                                     ))}
                                 </div>

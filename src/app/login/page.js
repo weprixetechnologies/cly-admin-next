@@ -31,7 +31,7 @@ export default function LoginPage() {
         setIsLoading(true);
 
         try {
-            const response = await fetch('http://72.60.219.181:3300/api/auth/login/admin', {
+            const response = await fetch('http://localhost:8800/api/auth/login/admin', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
