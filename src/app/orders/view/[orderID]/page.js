@@ -35,6 +35,8 @@ export default function OrderDetails({ params }) {
     const [editPaymentNotes, setEditPaymentNotes] = useState('')
     const [savingPaymentEdit, setSavingPaymentEdit] = useState(false)
 
+    const isLocked = orderStatus === 'accepted'
+
     useEffect(() => {
         const fetchOrder = async () => {
             try {
@@ -117,7 +119,7 @@ export default function OrderDetails({ params }) {
                 orderID,
                 productID,
                 acceptedUnits: requestedUnits,
-                adminNotes: 'Full quantity accepted'
+                adminNotes: (adminNotes[productID] || '')
             })
 
             if (data?.success) {
@@ -758,6 +760,7 @@ export default function OrderDetails({ params }) {
                                                     value={acceptedUnits[it.productID] !== undefined ? acceptedUnits[it.productID] : (it.accepted_units || 0)}
                                                     onChange={(e) => handleAcceptanceChange(it.productID, e.target.value)}
                                                     className="w-20 px-2 py-1 border rounded text-sm"
+                                                    disabled={isLocked}
                                                 />
                                             ) : (
                                                 <div>
@@ -780,7 +783,7 @@ export default function OrderDetails({ params }) {
                                                 <div className="flex gap-2">
                                                     <button
                                                         onClick={() => updatePartialAcceptance(it.productID)}
-                                                        disabled={saving}
+                                                        disabled={saving || isLocked}
                                                         className="px-3 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 disabled:opacity-50"
                                                     >
                                                         Save
@@ -810,14 +813,15 @@ export default function OrderDetails({ params }) {
                                                                 [it.productID]: it.admin_notes || ''
                                                             }))
                                                         }}
-                                                        className="px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
+                                                        className="px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 disabled:opacity-50"
+                                                        disabled={isLocked}
                                                     >
                                                         Edit
                                                     </button>
                                                     {it.acceptance_status !== 'full' && (
                                                         <button
                                                             onClick={() => acceptFullQuantity(it.productID, it.requested_units || it.units || 0)}
-                                                            disabled={saving}
+                                                            disabled={saving || isLocked}
                                                             className="px-3 py-1 bg-green-500 text-white text-xs rounded hover:bg-green-600 disabled:opacity-50"
                                                         >
                                                             FULL
@@ -882,6 +886,7 @@ export default function OrderDetails({ params }) {
                                             onChange={(e) => setPaidAmount(e.target.value === '' ? '' : parseFloat(e.target.value) || 0)}
                                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                             placeholder="0.00"
+                                            disabled={isLocked}
                                         />
                                         <p className="text-xs text-gray-500 mt-1">
                                             Maximum: ₹{getTotalOrderAmount().toFixed(2)}
@@ -897,13 +902,14 @@ export default function OrderDetails({ params }) {
                                             onChange={(e) => setPaymentNotes(e.target.value)}
                                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                             placeholder="Payment notes..."
+                                            disabled={isLocked}
                                         />
                                     </div>
                                 </div>
                                 <div className="flex gap-3 mt-4">
                                     <button
                                         onClick={updateOrderPayment}
-                                        disabled={savingPayment}
+                                        disabled={savingPayment || isLocked}
                                         className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
                                     >
                                         {savingPayment ? 'Saving...' : 'Save Payment'}
@@ -924,7 +930,8 @@ export default function OrderDetails({ params }) {
                             <div className="mt-6">
                                 <button
                                     onClick={() => setEditingPayment(true)}
-                                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+                                    disabled={isLocked}
                                 >
                                     Enter Payment Amount
                                 </button>
@@ -953,6 +960,7 @@ export default function OrderDetails({ params }) {
                                                                 value={editPaymentAmount}
                                                                 onChange={(e) => setEditPaymentAmount(e.target.value)}
                                                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                                                disabled={isLocked}
                                                             />
                                                         </div>
                                                         <div>
@@ -964,13 +972,14 @@ export default function OrderDetails({ params }) {
                                                                 value={editPaymentNotes}
                                                                 onChange={(e) => setEditPaymentNotes(e.target.value)}
                                                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                                                disabled={isLocked}
                                                             />
                                                         </div>
                                                     </div>
                                                     <div className="flex gap-2">
                                                         <button
                                                             onClick={() => updatePaymentEntry(payment.id)}
-                                                            disabled={savingPaymentEdit}
+                                                            disabled={savingPaymentEdit || isLocked}
                                                             className="px-3 py-1 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 text-sm"
                                                         >
                                                             {savingPaymentEdit ? 'Saving...' : 'Save'}
@@ -1001,13 +1010,15 @@ export default function OrderDetails({ params }) {
                                                     <div className="flex gap-2">
                                                         <button
                                                             onClick={() => startEditingPayment(payment)}
-                                                            className="px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm"
+                                                            className="px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm disabled:opacity-50"
+                                                            disabled={isLocked}
                                                         >
                                                             Edit
                                                         </button>
                                                         <button
                                                             onClick={() => deletePaymentEntry(payment.id)}
-                                                            className="px-3 py-1 bg-red-600 text-white rounded-md hover:bg-red-700 text-sm"
+                                                            className="px-3 py-1 bg-red-600 text-white rounded-md hover:bg-red-700 text-sm disabled:opacity-50"
+                                                            disabled={isLocked}
                                                         >
                                                             Delete
                                                         </button>
@@ -1036,11 +1047,12 @@ export default function OrderDetails({ params }) {
                                     placeholder="Add remarks for this order..."
                                     className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                     rows={4}
+                                    disabled={isLocked}
                                 />
                                 <div className="flex gap-3">
                                     <button
                                         onClick={updateOrderRemarks}
-                                        disabled={savingRemarks}
+                                        disabled={savingRemarks || isLocked}
                                         className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
                                     >
                                         {savingRemarks ? 'Saving...' : 'Save Remarks'}
@@ -1067,7 +1079,8 @@ export default function OrderDetails({ params }) {
                                 </div>
                                 <button
                                     onClick={() => setEditingRemarks(true)}
-                                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+                                    disabled={isLocked}
                                 >
                                     {remarks ? 'Edit Remarks' : 'Add Remarks'}
                                 </button>

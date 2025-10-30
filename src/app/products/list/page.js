@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../../contexts/AuthContext';
 import axiosInstance from '../../../utils/axiosInstance';
+import * as XLSX from 'xlsx';
 
 export default function ListProducts() {
     const [products, setProducts] = useState([]);
@@ -12,6 +13,7 @@ export default function ListProducts() {
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
+    const [exporting, setExporting] = useState(false);
     const { isAuthenticated } = useAuth();
     const router = useRouter();
 
@@ -100,12 +102,60 @@ export default function ListProducts() {
                 <div className="px-6 py-4">
                     <div className="flex justify-between items-center">
                         <h1 className="text-2xl font-bold text-gray-800">Products</h1>
-                        <button
-                            onClick={() => router.push('/products/add')}
-                            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
-                        >
-                            Add Product
-                        </button>
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={async () => {
+                                    router.push('/products/add');
+                                }}
+                                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+                            >
+                                Add Product
+                            </button>
+                            <button
+                                onClick={async () => {
+                                    try {
+                                        setExporting(true);
+                                        const pageSize = 1000;
+                                        let page = 1;
+                                        let allRows = [];
+                                        while (true) {
+                                            const { data } = await axiosInstance.get(`/products/list?page=${page}&limit=${pageSize}&search=`);
+                                            if (!data?.success) break;
+                                            const batch = data?.data?.products || [];
+                                            allRows = allRows.concat(batch);
+                                            const total = data?.data?.pagination?.total || 0;
+                                            if (allRows.length >= total || batch.length === 0) break;
+                                            page += 1;
+                                        }
+
+                                        const worksheetData = allRows.map((p) => ({
+                                            productID: p.productID,
+                                            productName: p.productName,
+                                            sku: p.sku,
+                                            category: p.categoryName || '',
+                                            price: p.productPrice,
+                                            status: p.status,
+                                            inventory: p.inventory,
+                                            createdAt: p.createdAt,
+                                        }));
+
+                                        const wb = XLSX.utils.book_new();
+                                        const ws = XLSX.utils.json_to_sheet(worksheetData);
+                                        XLSX.utils.book_append_sheet(wb, ws, 'Products');
+                                        XLSX.writeFile(wb, `products_${new Date().toISOString().slice(0,10)}.xlsx`);
+                                    } catch (e) {
+                                        console.error('Export failed', e);
+                                        alert('Failed to export products.');
+                                    } finally {
+                                        setExporting(false);
+                                    }
+                                }}
+                                disabled={exporting}
+                                className="bg-emerald-600 text-white px-4 py-2 rounded-md hover:bg-emerald-700 disabled:opacity-50"
+                            >
+                                {exporting ? 'Exporting…' : 'Export All Products'}
+                            </button>
+                        </div>
                     </div>
                 </div>
             </header>
