@@ -28,6 +28,8 @@ export default function OrderDetails({ params }) {
     const [savingPayment, setSavingPayment] = useState(false)
     const [editingRemarks, setEditingRemarks] = useState(false)
     const [remarks, setRemarks] = useState('')
+    const [remarksPhotos, setRemarksPhotos] = useState([])
+    const [newRemarksPhotos, setNewRemarksPhotos] = useState([])
     const [savingRemarks, setSavingRemarks] = useState(false)
     const [showInvoice, setShowInvoice] = useState(false)
     const [editingPaymentId, setEditingPaymentId] = useState(null)
@@ -47,6 +49,20 @@ export default function OrderDetails({ params }) {
                 if (rows.length > 0) {
                     setOrderStatus(rows[0].orderStatus || 'pending')
                     setRemarks(rows[0].remarks || '')
+                    // Parse remarks_photos if it exists
+                    let photos = [];
+                    if (rows[0].remarks_photos) {
+                        try {
+                            photos = typeof rows[0].remarks_photos === 'string' 
+                                ? JSON.parse(rows[0].remarks_photos) 
+                                : rows[0].remarks_photos;
+                            if (!Array.isArray(photos)) photos = [];
+                        } catch (e) {
+                            photos = [];
+                        }
+                    }
+                    setRemarksPhotos(photos)
+                    setNewRemarksPhotos([])
                 }
 
                 // Fetch order payment data
@@ -206,12 +222,67 @@ export default function OrderDetails({ params }) {
         }
     }
 
+    // Bunny.net configuration for photo upload
+    const storageZone = 'ithyaraa';
+    const storageRegion = 'sg.storage.bunnycdn.com';
+    const pullZoneUrl = 'https://ithyaraa.b-cdn.net';
+    const apiKey = '7017f7c4-638b-48ab-add3858172a8-f520-4b88';
+
+    const uploadPhotoToBunny = async (file) => {
+        const timestamp = Date.now();
+        const fileName = `remarks_${orderID}_${timestamp}_${encodeURIComponent(file.name)}`;
+        const uploadUrl = `https://${storageRegion}/${storageZone}/${fileName}`;
+        const publicUrl = `${pullZoneUrl}/${fileName}`;
+
+        const res = await fetch(uploadUrl, {
+            method: 'PUT',
+            headers: {
+                AccessKey: apiKey,
+                'Content-Type': file.type,
+            },
+            body: file,
+        });
+
+        if (!res.ok) {
+            const errorText = await res.text();
+            throw new Error(`Upload failed: ${res.status} ${res.statusText} - ${errorText}`);
+        }
+
+        return publicUrl;
+    };
+
+    const handleRemarksPhotoChange = async (e) => {
+        const files = Array.from(e.target.files);
+        if (files.length === 0) return;
+
+        try {
+            const uploadPromises = files.map(file => uploadPhotoToBunny(file));
+            const uploadedUrls = await Promise.all(uploadPromises);
+            setNewRemarksPhotos(prev => [...prev, ...uploadedUrls]);
+        } catch (error) {
+            console.error('Error uploading photos:', error);
+            alert('Failed to upload photos: ' + error.message);
+        }
+    };
+
+    const removeRemarksPhoto = (index, isNew = false) => {
+        if (isNew) {
+            setNewRemarksPhotos(prev => prev.filter((_, i) => i !== index));
+        } else {
+            setRemarksPhotos(prev => prev.filter((_, i) => i !== index));
+        }
+    };
+
     const updateOrderRemarks = async () => {
         try {
             setSavingRemarks(true)
 
+            // Combine existing and new photos
+            const allPhotos = [...remarksPhotos, ...newRemarksPhotos];
+
             const { data } = await axios.put(`/order/admin/${orderID}/remarks`, {
-                remarks: remarks
+                remarks: remarks,
+                remarksPhotos: allPhotos.length > 0 ? allPhotos : null
             })
 
             if (data?.success) {
@@ -220,6 +291,20 @@ export default function OrderDetails({ params }) {
                 setOrderItems(orderData?.data || [])
                 if (orderData?.data?.length > 0) {
                     setRemarks(orderData.data[0].remarks || '')
+                    // Parse remarks_photos
+                    let photos = [];
+                    if (orderData.data[0].remarks_photos) {
+                        try {
+                            photos = typeof orderData.data[0].remarks_photos === 'string' 
+                                ? JSON.parse(orderData.data[0].remarks_photos) 
+                                : orderData.data[0].remarks_photos;
+                            if (!Array.isArray(photos)) photos = [];
+                        } catch (e) {
+                            photos = [];
+                        }
+                    }
+                    setRemarksPhotos(photos)
+                    setNewRemarksPhotos([])
                 }
 
                 setEditingRemarks(false)
@@ -1049,6 +1134,73 @@ export default function OrderDetails({ params }) {
                                     rows={4}
                                     disabled={isLocked}
                                 />
+                                
+                                {/* Photo Upload Section */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Upload Photos (Optional)
+                                    </label>
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        multiple
+                                        onChange={handleRemarksPhotoChange}
+                                        className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        disabled={isLocked}
+                                    />
+                                    
+                                    {/* Existing Photos */}
+                                    {remarksPhotos.length > 0 && (
+                                        <div className="mt-4">
+                                            <p className="text-sm text-gray-600 mb-2">Existing Photos:</p>
+                                            <div className="grid grid-cols-4 gap-2">
+                                                {remarksPhotos.map((photo, index) => (
+                                                    <div key={index} className="relative group">
+                                                        <img
+                                                            src={photo}
+                                                            alt={`Remarks photo ${index + 1}`}
+                                                            className="w-full h-24 object-cover rounded border"
+                                                        />
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => removeRemarksPhoto(index, false)}
+                                                            disabled={isLocked}
+                                                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-30"
+                                                        >
+                                                            ×
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                    
+                                    {/* New Photos */}
+                                    {newRemarksPhotos.length > 0 && (
+                                        <div className="mt-4">
+                                            <p className="text-sm text-gray-600 mb-2">New Photos (to be added):</p>
+                                            <div className="grid grid-cols-4 gap-2">
+                                                {newRemarksPhotos.map((photo, index) => (
+                                                    <div key={index} className="relative group">
+                                                        <img
+                                                            src={photo}
+                                                            alt={`New photo ${index + 1}`}
+                                                            className="w-full h-24 object-cover rounded border"
+                                                        />
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => removeRemarksPhoto(index, true)}
+                                                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                                                        >
+                                                            ×
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
                                 <div className="flex gap-3">
                                     <button
                                         onClick={updateOrderRemarks}
@@ -1061,6 +1213,20 @@ export default function OrderDetails({ params }) {
                                         onClick={() => {
                                             setEditingRemarks(false)
                                             setRemarks(orderItems[0]?.remarks || '')
+                                            // Reset photos to original state
+                                            let photos = [];
+                                            if (orderItems[0]?.remarks_photos) {
+                                                try {
+                                                    photos = typeof orderItems[0].remarks_photos === 'string' 
+                                                        ? JSON.parse(orderItems[0].remarks_photos) 
+                                                        : orderItems[0].remarks_photos;
+                                                    if (!Array.isArray(photos)) photos = [];
+                                                } catch (e) {
+                                                    photos = [];
+                                                }
+                                            }
+                                            setRemarksPhotos(photos)
+                                            setNewRemarksPhotos([])
                                         }}
                                         className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600"
                                     >
@@ -1077,6 +1243,26 @@ export default function OrderDetails({ params }) {
                                         <p className="text-gray-500 italic">No remarks added yet</p>
                                     )}
                                 </div>
+                                
+                                {/* Display Photos */}
+                                {remarksPhotos.length > 0 && (
+                                    <div>
+                                        <p className="text-sm font-medium text-gray-700 mb-2">Photos:</p>
+                                        <div className="grid grid-cols-4 gap-2">
+                                            {remarksPhotos.map((photo, index) => (
+                                                <div key={index} className="relative">
+                                                    <img
+                                                        src={photo}
+                                                        alt={`Remarks photo ${index + 1}`}
+                                                        className="w-full h-24 object-cover rounded border cursor-pointer hover:opacity-80 transition"
+                                                        onClick={() => window.open(photo, '_blank')}
+                                                    />
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                                
                                 <button
                                     onClick={() => setEditingRemarks(true)}
                                     className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
@@ -1143,6 +1329,20 @@ export default function OrderDetails({ params }) {
                                     <div className="text-gray-700">Pincode</div>
                                     <div className="font-medium text-gray-900">{orderItems[0]?.addressPincode || '-'}</div>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Customer Comment Section */}
+                {orderItems[0]?.customer_comment && (
+                    <div className="bg-white rounded-lg shadow">
+                        <div className="p-6 border-b">
+                            <h2 className="text-lg font-semibold text-gray-900">Customer Comment</h2>
+                        </div>
+                        <div className="p-6">
+                            <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
+                                <p className="text-sm text-gray-800 whitespace-pre-wrap">{orderItems[0].customer_comment}</p>
                             </div>
                         </div>
                     </div>

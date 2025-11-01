@@ -15,6 +15,7 @@ export default function EditProduct() {
         minQty: '1',
         categoryID: '',
         categoryName: '',
+        themeCategory: '',
         inventory: '0',
         status: 'active'
     });
@@ -59,6 +60,7 @@ export default function EditProduct() {
                     minQty: product.minQty || '1',
                     categoryID: product.categoryID || '',
                     categoryName: product.categoryName || '',
+                    themeCategory: product.themeCategory || '',
                     inventory: product.inventory || '0',
                     status: product.status || 'active'
                 });
@@ -196,6 +198,7 @@ export default function EditProduct() {
                 minQty: formData.minQty,
                 categoryID: formData.categoryID,
                 categoryName: formData.categoryName,
+                themeCategory: formData.themeCategory || null,
                 inventory: formData.inventory,
                 status: formData.status,
                 featuredImages: featuredImageUrl,
@@ -443,6 +446,26 @@ export default function EditProduct() {
                                     min="0"
                                 />
                             </div>
+                        </div>
+
+                        {/* Theme Category */}
+                        <div>
+                            <label htmlFor="themeCategory" className="block text-sm font-medium text-slate-700 mb-2">
+                                Theme Category (Optional)
+                            </label>
+                            <input
+                                type="text"
+                                id="themeCategory"
+                                name="themeCategory"
+                                value={formData.themeCategory}
+                                onChange={handleInputChange}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 text-black focus:border-transparent outline-none"
+                                placeholder="e.g., Birthday, Wedding, Corporate, etc."
+                                maxLength={100}
+                            />
+                            <p className="text-xs text-gray-500 mt-1">
+                                Specify a theme category for this product (optional)
+                            </p>
                         </div>
 
                         {/* Image Upload */}

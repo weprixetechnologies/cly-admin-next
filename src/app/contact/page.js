@@ -22,6 +22,8 @@ const ContactPage = () => {
         { value: 'phone', label: 'Phone' },
         { value: 'address', label: 'Address' },
         { value: 'social_media', label: 'Social Media' },
+        { value: 'headquarter_address', label: 'Headquarter Address' },
+        { value: 'headquarter_phone', label: 'Headquarter Phone' },
         { value: 'other', label: 'Other' }
     ];
 

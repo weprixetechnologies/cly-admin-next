@@ -15,6 +15,7 @@ export default function AddProduct() {
         minQty: '1',
         categoryID: '',
         categoryName: '',
+        themeCategory: '',
         inventory: '0',
         status: 'active'
     });
@@ -139,6 +140,7 @@ export default function AddProduct() {
                 minQty: formData.minQty,
                 categoryID: formData.categoryID,
                 categoryName: formData.categoryName,
+                themeCategory: formData.themeCategory || null,
                 inventory: formData.inventory,
                 featuredImages: featuredImageUrl,
                 galleryImages: galleryImageUrls
@@ -380,6 +382,26 @@ export default function AddProduct() {
                                     min="0"
                                 />
                             </div>
+                        </div>
+
+                        {/* Theme Category */}
+                        <div>
+                            <label htmlFor="themeCategory" className="block text-sm font-medium text-slate-700 mb-2">
+                                Theme Category (Optional)
+                            </label>
+                            <input
+                                type="text"
+                                id="themeCategory"
+                                name="themeCategory"
+                                value={formData.themeCategory}
+                                onChange={handleInputChange}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                                placeholder="e.g., Birthday, Wedding, Corporate, etc."
+                                maxLength={100}
+                            />
+                            <p className="text-xs text-gray-500 mt-1">
+                                Specify a theme category for this product (optional)
+                            </p>
                         </div>
 
                         {/* Image Upload */}
