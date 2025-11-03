@@ -9,7 +9,7 @@ const LayoutWrapper = ({ children }) => {
     const { isAuthenticated, isLoading } = useAuth();
 
     // Pages that should not have sidebar and header
-    const excludePages = ['/login', '/register'];
+    const excludePages = ['/login', '/register', '/forgot-password', '/reset-password'];
     const shouldShowSidebar = !excludePages.includes(pathname);
 
     // Show loading spinner while checking authentication

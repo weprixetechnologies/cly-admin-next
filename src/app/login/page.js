@@ -13,6 +13,10 @@ export default function LoginPage() {
     const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [showForgot, setShowForgot] = useState(false);
+    const [fpEmail, setFpEmail] = useState('');
+    const [fpLoading, setFpLoading] = useState(false);
+    const [fpMessage, setFpMessage] = useState('');
     const router = useRouter();
     const { setAuthenticated } = useAuth();
 
@@ -187,11 +191,71 @@ export default function LoginPage() {
                     <div className="flex justify-end text-sm">
                         <button
                             type="button"
+                            onClick={() => {
+                                setShowForgot((prev) => !prev);
+                                setFpMessage('');
+                            }}
                             className="text-blue-600 hover:text-blue-800 underline"
                         >
-                            Forgot Password?
+                            {showForgot ? 'Hide Forgot Password' : 'Forgot Password?'}
                         </button>
                     </div>
+
+                    {showForgot && (
+                        <div className="mt-4 border border-gray-200 rounded-lg p-4">
+                            <h3 className="text-sm font-semibold text-gray-800 mb-2">Reset your password</h3>
+                            {fpMessage && (
+                                <div className="text-sm mb-3 px-3 py-2 rounded border" style={{
+                                    color: fpMessage.startsWith('Success') ? '#166534' : '#991b1b',
+                                    background: fpMessage.startsWith('Success') ? '#dcfce7' : '#fee2e2',
+                                    borderColor: fpMessage.startsWith('Success') ? '#86efac' : '#fecaca'
+                                }}>
+                                    {fpMessage}
+                                </div>
+                            )}
+                            <label className="block text-sm text-slate-700 mb-1">Email address</label>
+                            <input
+                                type="email"
+                                value={fpEmail}
+                                onChange={(e) => setFpEmail(e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-gray-700"
+                                placeholder="you@example.com"
+                            />
+                            <button
+                                type="button"
+                                disabled={fpLoading}
+                                onClick={async () => {
+                                    setFpMessage('');
+                                    if (!fpEmail.trim()) {
+                                        setFpMessage('Please enter your email address');
+                                        return;
+                                    }
+                                    try {
+                                        setFpLoading(true);
+                                        const apiBase = process.env.NEXT_PUBLIC_API_BASE || 'http://72.60.219.181:3300/api';
+                                        const res = await fetch(`${apiBase}/password-reset/request`, {
+                                            method: 'POST',
+                                            headers: { 'Content-Type': 'application/json' },
+                                            body: JSON.stringify({ email: fpEmail.trim() })
+                                        });
+                                        const data = await res.json();
+                                        if (data.success) {
+                                            setFpMessage('Success: If an account exists, a reset link has been sent.');
+                                        } else {
+                                            setFpMessage(data.message || 'Failed to send reset link');
+                                        }
+                                    } catch (e) {
+                                        setFpMessage('Something went wrong. Please try again.');
+                                    } finally {
+                                        setFpLoading(false);
+                                    }
+                                }}
+                                className="mt-3 w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-semibold py-2.5 px-4 rounded-md transition-colors"
+                            >
+                                {fpLoading ? 'Sending…' : 'Send Reset Link'}
+                            </button>
+                        </div>
+                    )}
                 </div>
 
                 {/* Register Link */}
