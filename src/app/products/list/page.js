@@ -26,7 +26,7 @@ export default function ListProducts() {
     const loadProducts = async () => {
         try {
             setLoading(true);
-            const response = await axiosInstance.get(`/products/list?page=${currentPage}&search=${searchTerm}`);
+            const response = await axiosInstance.get(`/products/list?page=${currentPage}&limit=60&search=${searchTerm}`);
 
             if (response.data.success) {
                 setProducts(response.data.data.products);
@@ -142,7 +142,7 @@ export default function ListProducts() {
                                         const wb = XLSX.utils.book_new();
                                         const ws = XLSX.utils.json_to_sheet(worksheetData);
                                         XLSX.utils.book_append_sheet(wb, ws, 'Products');
-                                        XLSX.writeFile(wb, `products_${new Date().toISOString().slice(0,10)}.xlsx`);
+                                        XLSX.writeFile(wb, `products_${new Date().toISOString().slice(0, 10)}.xlsx`);
                                     } catch (e) {
                                         console.error('Export failed', e);
                                         alert('Failed to export products.');
@@ -154,6 +154,21 @@ export default function ListProducts() {
                                 className="bg-emerald-600 text-white px-4 py-2 rounded-md hover:bg-emerald-700 disabled:opacity-50"
                             >
                                 {exporting ? 'Exporting…' : 'Export All Products'}
+                            </button>
+                            <button
+                                onClick={async () => {
+                                    if (!confirm('This will mark ALL products as deleted. Continue?')) return;
+                                    try {
+                                        await axiosInstance.delete('/products/all');
+                                        alert('All products deleted (soft delete). Refreshing list...');
+                                        loadProducts();
+                                    } catch (e) {
+                                        alert('Failed to delete all products');
+                                    }
+                                }}
+                                className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700"
+                            >
+                                Delete All
                             </button>
                         </div>
                     </div>
@@ -309,18 +324,26 @@ export default function ListProducts() {
                                 Previous
                             </button>
 
-                            {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                                <button
-                                    key={page}
-                                    onClick={() => setCurrentPage(page)}
-                                    className={`px-3 py-2 text-sm font-medium rounded-md ${currentPage === page
-                                        ? 'bg-blue-600 text-white'
-                                        : 'text-gray-500 bg-white border border-gray-300 hover:bg-gray-50'
-                                        }`}
-                                >
-                                    {page}
-                                </button>
-                            ))}
+                            {(() => {
+                                const pages = [];
+                                const start = Math.max(1, currentPage - 1);
+                                const end = Math.min(totalPages, currentPage + 1);
+                                for (let p = start; p <= end; p++) {
+                                    pages.push(
+                                        <button
+                                            key={p}
+                                            onClick={() => setCurrentPage(p)}
+                                            className={`px-3 py-2 text-sm font-medium rounded-md ${currentPage === p
+                                                ? 'bg-blue-600 text-white'
+                                                : 'text-gray-500 bg-white border border-gray-300 hover:bg-gray-50'
+                                                }`}
+                                        >
+                                            {p}
+                                        </button>
+                                    );
+                                }
+                                return pages;
+                            })()}
 
                             <button
                                 onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}

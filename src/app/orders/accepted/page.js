@@ -8,13 +8,14 @@ import axios from '../../../utils/axiosInstance';
 export default function AcceptedOrders() {
     const [isLoading, setIsLoading] = useState(true);
     const [orders, setOrders] = useState([]);
-    const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0, totalPages: 0 });
+    const [pagination, setPagination] = useState({ page: 1, limit: 40, total: 0, totalPages: 0 });
     const [filters, setFilters] = useState({
         search: '',
         paymentMode: 'all',
         dateFrom: '',
         dateTo: ''
     });
+    const [searchDraft, setSearchDraft] = useState('');
     const router = useRouter();
 
     const fetchOrders = async (page = 1) => {
@@ -23,7 +24,7 @@ export default function AcceptedOrders() {
             const params = new URLSearchParams({
                 status: 'accepted',
                 page: page.toString(),
-                limit: '10',
+                limit: '40',
                 search: filters.search,
                 paymentMode: filters.paymentMode,
                 dateFrom: filters.dateFrom,
@@ -34,7 +35,7 @@ export default function AcceptedOrders() {
             if (data.success === false) {
                 console.error('[AcceptedOrders] API error:', data.message, data.error);
                 setOrders([]);
-                setPagination({ page: 1, limit: 10, total: 0, totalPages: 0 });
+                setPagination({ page: 1, limit: 40, total: 0, totalPages: 0 });
             } else {
                 setOrders(data.data || []);
                 setPagination(data.pagination || { page: 1, limit: 10, total: 0, totalPages: 0 });
@@ -94,13 +95,22 @@ export default function AcceptedOrders() {
                     <div className="mb-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Search</label>
-                            <input
-                                type="text"
-                                placeholder="Order ID, User, Product..."
-                                value={filters.search}
-                                onChange={(e) => handleFilterChange('search', e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            />
+                            <div className="flex gap-2">
+                                <input
+                                    type="text"
+                                    placeholder="Order ID, User, Product..."
+                                    value={searchDraft}
+                                    onChange={(e) => setSearchDraft(e.target.value)}
+                                    onKeyDown={(e) => { if (e.key === 'Enter') setFilters(prev => ({ ...prev, search: searchDraft })); }}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                />
+                                <button
+                                    onClick={() => setFilters(prev => ({ ...prev, search: searchDraft }))}
+                                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                                >
+                                    Search
+                                </button>
+                            </div>
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Payment</label>
@@ -144,7 +154,7 @@ export default function AcceptedOrders() {
                                     <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Items</th>
                                     <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Requested/Accepted</th>
                                     <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Amount</th>
-                                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Payment</th>
+                                    {/* <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Payment</th> */}
                                     <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Status</th>
                                     <th className="px-4 py-2 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">Actions</th>
                                 </tr>
@@ -167,7 +177,7 @@ export default function AcceptedOrders() {
                                             </div>
                                         </td>
                                         <td className="px-4 py-2 text-sm text-gray-900 font-semibold">₹{o.order_amount || '0.00'}</td>
-                                        <td className="px-4 py-2 text-sm text-gray-900">{o.paymentMode || '-'}</td>
+                                        {/* <td className="px-4 py-2 text-sm text-gray-900">{o.paymentMode || '-'}</td> */}
                                         <td className="px-4 py-2">
                                             <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">accepted</span>
                                         </td>
@@ -200,23 +210,28 @@ export default function AcceptedOrders() {
                                     Previous
                                 </button>
 
-                                {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
-                                    const pageNum = Math.max(1, pagination.page - 2) + i;
-                                    if (pageNum > pagination.totalPages) return null;
-
-                                    return (
-                                        <button
-                                            key={pageNum}
-                                            onClick={() => handlePageChange(pageNum)}
-                                            className={`px-3 py-2 text-sm border rounded-md ${pageNum === pagination.page
-                                                ? 'bg-blue-600 text-white border-blue-600'
-                                                : 'border-gray-300 hover:bg-gray-50'
-                                                }`}
-                                        >
-                                            {pageNum}
-                                        </button>
-                                    );
-                                })}
+                                {(() => {
+                                    const pages = [];
+                                    const current = pagination.page;
+                                    const total = pagination.totalPages;
+                                    const start = Math.max(1, current - 1);
+                                    const end = Math.min(total, current + 1);
+                                    for (let p = start; p <= end; p++) {
+                                        pages.push(
+                                            <button
+                                                key={p}
+                                                onClick={() => handlePageChange(p)}
+                                                className={`px-3 py-2 text-sm border rounded-md ${p === current
+                                                    ? 'bg-blue-600 text-white border-blue-600'
+                                                    : 'border-gray-300 hover:bg-gray-50'
+                                                    }`}
+                                            >
+                                                {p}
+                                            </button>
+                                        );
+                                    }
+                                    return pages;
+                                })()}
 
                                 <button
                                     onClick={() => handlePageChange(pagination.page + 1)}

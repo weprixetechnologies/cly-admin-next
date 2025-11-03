@@ -61,6 +61,22 @@ export default function AllUsers() {
         setUsers(filteredUsers);
     };
 
+    const handleDeleteUser = async (uid) => {
+        if (!confirm('Delete this user permanently?')) return;
+        try {
+            const { data } = await axios.delete(`/users/${uid}`);
+            if (data.success) {
+                setAllUsers(prev => prev.filter(u => u.uid !== uid));
+                alert('User deleted');
+            } else {
+                alert(data.message || 'Failed to delete user');
+            }
+        } catch (e) {
+            console.error('Delete user failed', e);
+            alert('Failed to delete user');
+        }
+    };
+
     const getStatusColor = (status) => {
         switch (status) {
             case 'approved':
@@ -212,12 +228,18 @@ export default function AllUsers() {
                                                     </div>
                                                 )}
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                                                 <button
                                                     onClick={() => router.push(`/users/edit/${user.uid}`)}
                                                     className="inline-flex items-center px-2 py-1 border border-transparent text-xs font-medium rounded text-white bg-blue-600 hover:bg-blue-700"
                                                 >
                                                     Edit
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDeleteUser(user.uid)}
+                                                    className="inline-flex items-center px-2 py-1 border border-transparent text-xs font-medium rounded text-white bg-red-600 hover:bg-red-700"
+                                                >
+                                                    Delete
                                                 </button>
                                             </td>
                                         </tr>
