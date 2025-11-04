@@ -53,8 +53,8 @@ export default function OrderDetails({ params }) {
                     let photos = [];
                     if (rows[0].remarks_photos) {
                         try {
-                            photos = typeof rows[0].remarks_photos === 'string' 
-                                ? JSON.parse(rows[0].remarks_photos) 
+                            photos = typeof rows[0].remarks_photos === 'string'
+                                ? JSON.parse(rows[0].remarks_photos)
                                 : rows[0].remarks_photos;
                             if (!Array.isArray(photos)) photos = [];
                         } catch (e) {
@@ -223,10 +223,10 @@ export default function OrderDetails({ params }) {
     }
 
     // Bunny.net configuration for photo upload
-    const storageZone = 'ithyaraa';
-    const storageRegion = 'sg.storage.bunnycdn.com';
-    const pullZoneUrl = 'https://ithyaraa.b-cdn.net';
-    const apiKey = '7017f7c4-638b-48ab-add3858172a8-f520-4b88';
+    const storageZone = 'cly-bunny';
+    const storageRegion = 'storage.bunnycdn.com';
+    const pullZoneUrl = 'https://cly-pull-bunny.b-cdn.net';
+    const apiKey = '22cfd8b3-8021-40a3-b100a9d48bc0-7dc3-4654';
 
     const uploadPhotoToBunny = async (file) => {
         const timestamp = Date.now();
@@ -295,8 +295,8 @@ export default function OrderDetails({ params }) {
                     let photos = [];
                     if (orderData.data[0].remarks_photos) {
                         try {
-                            photos = typeof orderData.data[0].remarks_photos === 'string' 
-                                ? JSON.parse(orderData.data[0].remarks_photos) 
+                            photos = typeof orderData.data[0].remarks_photos === 'string'
+                                ? JSON.parse(orderData.data[0].remarks_photos)
                                 : orderData.data[0].remarks_photos;
                             if (!Array.isArray(photos)) photos = [];
                         } catch (e) {
@@ -1134,7 +1134,7 @@ export default function OrderDetails({ params }) {
                                     rows={4}
                                     disabled={isLocked}
                                 />
-                                
+
                                 {/* Photo Upload Section */}
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -1148,7 +1148,7 @@ export default function OrderDetails({ params }) {
                                         className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                         disabled={isLocked}
                                     />
-                                    
+
                                     {/* Existing Photos */}
                                     {remarksPhotos.length > 0 && (
                                         <div className="mt-4">
@@ -1174,7 +1174,7 @@ export default function OrderDetails({ params }) {
                                             </div>
                                         </div>
                                     )}
-                                    
+
                                     {/* New Photos */}
                                     {newRemarksPhotos.length > 0 && (
                                         <div className="mt-4">
@@ -1217,8 +1217,8 @@ export default function OrderDetails({ params }) {
                                             let photos = [];
                                             if (orderItems[0]?.remarks_photos) {
                                                 try {
-                                                    photos = typeof orderItems[0].remarks_photos === 'string' 
-                                                        ? JSON.parse(orderItems[0].remarks_photos) 
+                                                    photos = typeof orderItems[0].remarks_photos === 'string'
+                                                        ? JSON.parse(orderItems[0].remarks_photos)
                                                         : orderItems[0].remarks_photos;
                                                     if (!Array.isArray(photos)) photos = [];
                                                 } catch (e) {
@@ -1243,7 +1243,7 @@ export default function OrderDetails({ params }) {
                                         <p className="text-gray-500 italic">No remarks added yet</p>
                                     )}
                                 </div>
-                                
+
                                 {/* Display Photos */}
                                 {remarksPhotos.length > 0 && (
                                     <div>
@@ -1262,7 +1262,7 @@ export default function OrderDetails({ params }) {
                                         </div>
                                     </div>
                                 )}
-                                
+
                                 <button
                                     onClick={() => setEditingRemarks(true)}
                                     className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"

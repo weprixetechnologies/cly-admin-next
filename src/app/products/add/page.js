@@ -71,10 +71,10 @@ export default function AddProduct() {
     };
 
     // Bunny.net configuration
-    const storageZone = 'ithyaraa';
-    const storageRegion = 'sg.storage.bunnycdn.com';
-    const pullZoneUrl = 'https://ithyaraa.b-cdn.net';
-    const apiKey = '7017f7c4-638b-48ab-add3858172a8-f520-4b88'; // ⚠️ Dev only
+    const storageZone = 'cly-bunny';
+    const storageRegion = 'storage.bunnycdn.com';
+    const pullZoneUrl = 'https://cly-pull-bunny.b-cdn.net';
+    const apiKey = '22cfd8b3-8021-40a3-b100a9d48bc0-7dc3-4654'; // ⚠️ Dev only
 
     // Upload a single file to BunnyCDN
     const uploadToBunny = async (file) => {
