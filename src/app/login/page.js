@@ -35,7 +35,7 @@ export default function LoginPage() {
         setIsLoading(true);
 
         try {
-            const response = await fetch('http://72.60.219.181:3300/api/auth/login/admin', {
+            const response = await fetch('https://api.cursiveletters.in/api/auth/login/admin', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -232,7 +232,7 @@ export default function LoginPage() {
                                     }
                                     try {
                                         setFpLoading(true);
-                                        const apiBase = process.env.NEXT_PUBLIC_API_BASE || 'http://72.60.219.181:3300/api';
+                                        const apiBase = process.env.NEXT_PUBLIC_API_BASE || 'https://api.cursiveletters.in/api';
                                         const res = await fetch(`${apiBase}/password-reset/request`, {
                                             method: 'POST',
                                             headers: { 'Content-Type': 'application/json' },
