@@ -237,7 +237,7 @@ export default function EditProduct() {
             if (response.data.success) {
                 setSuccess('Product updated successfully!');
                 setTimeout(() => {
-                    router.push(`/products/edit/${productID}`);
+                    router.push(`/products/list`);
                 }, 2000);
             } else {
                 setError(response.data.message || 'Failed to update product');
