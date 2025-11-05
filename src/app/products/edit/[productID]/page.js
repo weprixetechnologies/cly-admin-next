@@ -111,12 +111,39 @@ export default function EditProduct() {
     };
 
     const handleGalleryImagesChange = (e) => {
-        const files = Array.from(e.target.files);
-        if (files.length > 5) {
-            setError('Maximum 5 gallery images allowed');
-            return;
-        }
-        setGalleryImages(files);
+        const files = Array.from(e.target.files || []);
+        if (files.length === 0) return;
+
+        setError('');
+        setSuccess('');
+
+        setGalleryImages(prev => {
+            const existingCount = existingImages.gallery.length;
+            const previousNewFiles = prev;
+
+            // Merge previous new files with newly selected files, de-duplicating by name/size/lastModified
+            const merged = [...previousNewFiles];
+            const seen = new Set(previousNewFiles.map(f => `${f.name}-${f.size}-${f.lastModified}`));
+            for (const file of files) {
+                const key = `${file.name}-${file.size}-${file.lastModified}`;
+                if (!seen.has(key)) {
+                    merged.push(file);
+                    seen.add(key);
+                }
+            }
+
+            // Enforce a maximum of 5 total images (existing + new)
+            const allowedNew = Math.max(0, 5 - existingCount);
+            if (merged.length > allowedNew) {
+                setError(`You can add ${allowedNew} more image(s) (max 5 total).`);
+                return merged.slice(0, allowedNew);
+            }
+
+            return merged;
+        });
+
+        // Clear the input so selecting the same file again will retrigger onChange
+        e.target.value = '';
     };
 
     const removeExistingGalleryImage = (index) => {
@@ -210,7 +237,7 @@ export default function EditProduct() {
             if (response.data.success) {
                 setSuccess('Product updated successfully!');
                 setTimeout(() => {
-                    router.push('/products/list');
+                    router.refresh();
                 }, 2000);
             } else {
                 setError(response.data.message || 'Failed to update product');
