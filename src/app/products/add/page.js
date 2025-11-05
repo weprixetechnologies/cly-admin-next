@@ -149,18 +149,6 @@ export default function AddProduct() {
             const response = await axiosInstance.post('/products/add', productData);
 
             if (response.data.success) {
-                // Update category product count if category is selected
-                if (formData.categoryID) {
-                    try {
-                        await axiosInstance.patch(`/categories/${formData.categoryID}/product-count`, {
-                            increment: true
-                        });
-                    } catch (error) {
-                        console.error('Failed to update category product count:', error);
-                        // Don't show error to user as product was created successfully
-                    }
-                }
-
                 setSuccess('Product added successfully!');
                 setTimeout(() => {
                     router.push('/products/list');

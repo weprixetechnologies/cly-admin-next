@@ -208,29 +208,6 @@ export default function EditProduct() {
             const response = await axiosInstance.put(`/products/${productID}`, productData);
 
             if (response.data.success) {
-                // Handle category count updates
-                try {
-                    // If category changed, update counts
-                    if (originalCategoryID !== formData.categoryID) {
-                        // Decrease count for original category (if it exists)
-                        if (originalCategoryID) {
-                            await axiosInstance.patch(`/categories/${originalCategoryID}/product-count`, {
-                                increment: false
-                            });
-                        }
-
-                        // Increase count for new category (if selected)
-                        if (formData.categoryID) {
-                            await axiosInstance.patch(`/categories/${formData.categoryID}/product-count`, {
-                                increment: true
-                            });
-                        }
-                    }
-                } catch (error) {
-                    console.error('Failed to update category product counts:', error);
-                    // Don't show error to user as product was updated successfully
-                }
-
                 setSuccess('Product updated successfully!');
                 setTimeout(() => {
                     router.push('/products/list');

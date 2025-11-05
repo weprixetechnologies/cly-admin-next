@@ -51,6 +51,19 @@ export default function ListCategories() {
         }
     };
 
+    const handleRemoveFromProducts = async (category) => {
+        try {
+            const response = await axiosInstance.patch(`/categories/${category.categoryID}/remove-from-products`);
+            if (response.data.success) {
+                setCategories(prev => prev.map(cat => cat.categoryID === category.categoryID ? { ...cat, productCount: 0 } : cat));
+            } else {
+                setError(response.data.message || 'Failed to remove category from products');
+            }
+        } catch (error) {
+            setError(error.response?.data?.message || 'Failed to remove category from products');
+        }
+    };
+
     const confirmDelete = (category) => {
         setDeleteConfirm(category);
     };
@@ -186,6 +199,13 @@ export default function ListCategories() {
                                                             className="text-indigo-600 hover:text-indigo-900"
                                                         >
                                                             Edit
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleRemoveFromProducts(category)}
+                                                            className="text-yellow-600 hover:text-yellow-800"
+                                                            disabled={(category.productCount || 0) === 0}
+                                                        >
+                                                            Remove from products
                                                         </button>
                                                         <button
                                                             onClick={() => confirmDelete(category)}
