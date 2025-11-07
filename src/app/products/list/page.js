@@ -11,6 +11,7 @@ export default function ListProducts() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
+    const [statusFilter, setStatusFilter] = useState('all');
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [exporting, setExporting] = useState(false);
@@ -21,12 +22,20 @@ export default function ListProducts() {
         if (isAuthenticated) {
             loadProducts();
         }
-    }, [isAuthenticated, currentPage, searchTerm]);
+    }, [isAuthenticated, currentPage, searchTerm, statusFilter]);
 
     const loadProducts = async () => {
         try {
             setLoading(true);
-            const response = await axiosInstance.get(`/products/list?page=${currentPage}&limit=60&search=${searchTerm}`);
+            const params = new URLSearchParams({
+                page: currentPage.toString(),
+                limit: '60',
+                search: searchTerm || ''
+            });
+            if (statusFilter !== 'all') {
+                params.append('status', statusFilter);
+            }
+            const response = await axiosInstance.get(`/products/list?${params.toString()}`);
 
             if (response.data.success) {
                 setProducts(response.data.data.products);
@@ -44,6 +53,11 @@ export default function ListProducts() {
     const handleSearch = (e) => {
         setSearchTerm(e.target.value);
         setCurrentPage(1); // Reset to first page when searching
+    };
+
+    const handleStatusFilterChange = (e) => {
+        setStatusFilter(e.target.value);
+        setCurrentPage(1); // Reset to first page when filtering
     };
 
     const handleDelete = async (productID) => {
@@ -119,7 +133,15 @@ export default function ListProducts() {
                                         let page = 1;
                                         let allRows = [];
                                         while (true) {
-                                            const { data } = await axiosInstance.get(`/products/list?page=${page}&limit=${pageSize}&search=`);
+                                            const exportParams = new URLSearchParams({
+                                                page: page.toString(),
+                                                limit: pageSize.toString(),
+                                                search: searchTerm || ''
+                                            });
+                                            if (statusFilter !== 'all') {
+                                                exportParams.append('status', statusFilter);
+                                            }
+                                            const { data } = await axiosInstance.get(`/products/list?${exportParams.toString()}`);
                                             if (!data?.success) break;
                                             const batch = data?.data?.products || [];
                                             allRows = allRows.concat(batch);
@@ -188,6 +210,17 @@ export default function ListProducts() {
                                     onChange={handleSearch}
                                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                                 />
+                            </div>
+                            <div className="w-48">
+                                <select
+                                    value={statusFilter}
+                                    onChange={handleStatusFilterChange}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                                >
+                                    <option value="all">All Status</option>
+                                    <option value="active">Active</option>
+                                    <option value="inactive">Inactive</option>
+                                </select>
                             </div>
                         </div>
                     </div>
