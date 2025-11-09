@@ -165,9 +165,29 @@ export default function EditProduct() {
     const pullZoneUrl = 'https://cly-pull-bunny.b-cdn.net';
     const apiKey = '22cfd8b3-8021-40a3-b100a9d48bc0-7dc3-4654'; // ⚠️ Dev only
 
+    // Generate random 5-digit alphanumeric string
+    const generateRandomAlphanumeric = () => {
+        const chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        let result = '';
+        for (let i = 0; i < 5; i++) {
+            result += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        return result;
+    };
+
     // Upload a single file to BunnyCDN
     const uploadToBunny = async (file) => {
-        const fileName = encodeURIComponent(file.name);
+        // Extract filename and extension
+        const originalName = file.name;
+        const lastDotIndex = originalName.lastIndexOf('.');
+        const nameWithoutExt = lastDotIndex > 0 ? originalName.substring(0, lastDotIndex) : originalName;
+        const extension = lastDotIndex > 0 ? originalName.substring(lastDotIndex) : '';
+
+        // Generate random 5-digit alphanumeric and append to filename
+        const randomSuffix = generateRandomAlphanumeric();
+        const newFileName = `${nameWithoutExt}_${randomSuffix}${extension}`;
+
+        const fileName = encodeURIComponent(newFileName);
         const uploadUrl = `https://${storageRegion}/${storageZone}/${fileName}`;
         const publicUrl = `${pullZoneUrl}/${fileName}`;
 
@@ -181,7 +201,7 @@ export default function EditProduct() {
         });
 
         if (!res.ok) throw new Error(`Upload failed: ${res.status}`);
-        return { imgUrl: publicUrl, imgAlt: file.name };
+        return { imgUrl: publicUrl, imgAlt: newFileName };
     };
 
     const handleSubmit = async (e) => {
