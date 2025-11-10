@@ -17,6 +17,8 @@ export default function ListProducts() {
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [exporting, setExporting] = useState(false);
+    const [stats, setStats] = useState(null);
+    const [statsLoading, setStatsLoading] = useState(false);
     const { isAuthenticated } = useAuth();
     const router = useRouter();
 
@@ -29,6 +31,7 @@ export default function ListProducts() {
     useEffect(() => {
         if (isAuthenticated) {
             loadProducts();
+            loadStats();
         }
     }, [isAuthenticated, currentPage, searchTerm, statusFilter, categoryFilter]);
 
@@ -40,6 +43,30 @@ export default function ListProducts() {
             }
         } catch (error) {
             console.error('Error loading categories:', error);
+        }
+    };
+
+    const loadStats = async () => {
+        try {
+            setStatsLoading(true);
+            const params = new URLSearchParams();
+            if (searchTerm) {
+                params.append('search', searchTerm);
+            }
+            if (categoryFilter !== 'all') {
+                params.append('categoryID', categoryFilter);
+            }
+            if (statusFilter !== 'all') {
+                params.append('status', statusFilter);
+            }
+            const response = await axiosInstance.get(`/products/stats?${params.toString()}`);
+            if (response.data.success) {
+                setStats(response.data.data);
+            }
+        } catch (error) {
+            console.error('Error loading stats:', error);
+        } finally {
+            setStatsLoading(false);
         }
     };
 
@@ -269,6 +296,108 @@ export default function ListProducts() {
                         </div>
                     </div>
                 </div>
+
+                {/* Stats Section */}
+                {stats && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                        <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow-lg p-6 text-white">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-blue-100 text-sm font-medium">Total Products</p>
+                                    <p className="text-3xl font-bold mt-2">{stats.total}</p>
+                                </div>
+                                <div className="bg-blue-400/20 rounded-full p-3">
+                                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-lg shadow-lg p-6 text-white">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-green-100 text-sm font-medium">Active Products</p>
+                                    <p className="text-3xl font-bold mt-2">{stats.active}</p>
+                                </div>
+                                <div className="bg-green-400/20 rounded-full p-3">
+                                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg shadow-lg p-6 text-white">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-orange-100 text-sm font-medium">Low Stock</p>
+                                    <p className="text-3xl font-bold mt-2">{stats.lowStock}</p>
+                                </div>
+                                <div className="bg-orange-400/20 rounded-full p-3">
+                                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="bg-gradient-to-br from-red-500 to-red-600 rounded-lg shadow-lg p-6 text-white">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-red-100 text-sm font-medium">Out of Stock</p>
+                                    <p className="text-3xl font-bold mt-2">{stats.outOfStock}</p>
+                                </div>
+                                <div className="bg-red-400/20 rounded-full p-3">
+                                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Additional Stats Row */}
+                {stats && (
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                        <div className="bg-white rounded-lg shadow p-6 border-l-4 border-purple-500">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-gray-600 text-sm font-medium">Inactive Products</p>
+                                    <p className="text-2xl font-bold text-gray-800 mt-1">{stats.inactive}</p>
+                                </div>
+                                <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                                </svg>
+                            </div>
+                        </div>
+
+                        <div className="bg-white rounded-lg shadow p-6 border-l-4 border-indigo-500">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-gray-600 text-sm font-medium">Categories</p>
+                                    <p className="text-2xl font-bold text-gray-800 mt-1">{stats.totalCategories}</p>
+                                </div>
+                                <svg className="w-8 h-8 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                                </svg>
+                            </div>
+                        </div>
+
+                        <div className="bg-white rounded-lg shadow p-6 border-l-4 border-emerald-500">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-gray-600 text-sm font-medium">Inventory Value</p>
+                                    <p className="text-2xl font-bold text-gray-800 mt-1">₹{stats.inventoryValue.toLocaleString('en-IN')}</p>
+                                </div>
+                                <svg className="w-8 h-8 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* Error Message */}
                 {error && (

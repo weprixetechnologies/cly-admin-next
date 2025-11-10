@@ -10,6 +10,8 @@ export default function AllUsers() {
     const [allUsers, setAllUsers] = useState([]);
     const [filter, setFilter] = useState('all');
     const [searchTerm, setSearchTerm] = useState('');
+    const [stats, setStats] = useState(null);
+    const [statsLoading, setStatsLoading] = useState(false);
     const router = useRouter();
 
     useEffect(() => {
@@ -22,6 +24,7 @@ export default function AllUsers() {
 
     useEffect(() => {
         filterUsers();
+        loadStats();
     }, [allUsers, filter, searchTerm]);
 
     const fetchUsers = async () => {
@@ -59,6 +62,27 @@ export default function AllUsers() {
         }
 
         setUsers(filteredUsers);
+    };
+
+    const loadStats = async () => {
+        try {
+            setStatsLoading(true);
+            const params = new URLSearchParams();
+            if (searchTerm) {
+                params.append('search', searchTerm);
+            }
+            if (filter !== 'all') {
+                params.append('approvalStatus', filter);
+            }
+            const { data } = await axios.get(`/admin/users/stats?${params.toString()}`);
+            if (data.success) {
+                setStats(data.data);
+            }
+        } catch (error) {
+            console.error('Error loading stats:', error);
+        } finally {
+            setStatsLoading(false);
+        }
     };
 
     const handleDeleteUser = async (uid) => {
@@ -112,6 +136,120 @@ export default function AllUsers() {
             </header>
 
             <main className="p-6">
+                {/* Stats Section */}
+                {stats && (
+                    <>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                            <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow-lg p-6 text-white">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <p className="text-blue-100 text-sm font-medium">Total Users</p>
+                                        <p className="text-3xl font-bold mt-2">{stats.total}</p>
+                                    </div>
+                                    <div className="bg-blue-400/20 rounded-full p-3">
+                                        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-lg shadow-lg p-6 text-white">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <p className="text-green-100 text-sm font-medium">Approved</p>
+                                        <p className="text-3xl font-bold mt-2">{stats.approved}</p>
+                                    </div>
+                                    <div className="bg-green-400/20 rounded-full p-3">
+                                        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-lg shadow-lg p-6 text-white">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <p className="text-yellow-100 text-sm font-medium">Pending</p>
+                                        <p className="text-3xl font-bold mt-2">{stats.pending}</p>
+                                    </div>
+                                    <div className="bg-yellow-400/20 rounded-full p-3">
+                                        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="bg-gradient-to-br from-red-500 to-red-600 rounded-lg shadow-lg p-6 text-white">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <p className="text-red-100 text-sm font-medium">Rejected</p>
+                                        <p className="text-3xl font-bold mt-2">{stats.rejected}</p>
+                                    </div>
+                                    <div className="bg-red-400/20 rounded-full p-3">
+                                        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Additional Stats Row */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                            <div className="bg-white rounded-lg shadow p-6 border-l-4 border-indigo-500">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <p className="text-gray-600 text-sm font-medium">Active Users</p>
+                                        <p className="text-2xl font-bold text-gray-800 mt-1">{stats.active}</p>
+                                    </div>
+                                    <svg className="w-8 h-8 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                    </svg>
+                                </div>
+                            </div>
+
+                            <div className="bg-white rounded-lg shadow p-6 border-l-4 border-purple-500">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <p className="text-gray-600 text-sm font-medium">Admin Users</p>
+                                        <p className="text-2xl font-bold text-gray-800 mt-1">{stats.admin}</p>
+                                    </div>
+                                    <svg className="w-8 h-8 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                                    </svg>
+                                </div>
+                            </div>
+
+                            <div className="bg-white rounded-lg shadow p-6 border-l-4 border-emerald-500">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <p className="text-gray-600 text-sm font-medium">Regular Users</p>
+                                        <p className="text-2xl font-bold text-gray-800 mt-1">{stats.regular}</p>
+                                    </div>
+                                    <svg className="w-8 h-8 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                    </svg>
+                                </div>
+                            </div>
+
+                            <div className="bg-white rounded-lg shadow p-6 border-l-4 border-cyan-500">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <p className="text-gray-600 text-sm font-medium">Recent (7 days)</p>
+                                        <p className="text-2xl font-bold text-gray-800 mt-1">{stats.recent}</p>
+                                    </div>
+                                    <svg className="w-8 h-8 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                    </>
+                )}
+
                 <div className="bg-white rounded-lg shadow">
                     <div className="px-6 py-4 border-b border-gray-200">
                         <div className="flex justify-between items-center mb-4">
