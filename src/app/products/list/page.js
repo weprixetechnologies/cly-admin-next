@@ -12,6 +12,8 @@ export default function ListProducts() {
     const [error, setError] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
+    const [categoryFilter, setCategoryFilter] = useState('all');
+    const [categories, setCategories] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [exporting, setExporting] = useState(false);
@@ -20,9 +22,26 @@ export default function ListProducts() {
 
     useEffect(() => {
         if (isAuthenticated) {
+            loadCategories();
+        }
+    }, [isAuthenticated]);
+
+    useEffect(() => {
+        if (isAuthenticated) {
             loadProducts();
         }
-    }, [isAuthenticated, currentPage, searchTerm, statusFilter]);
+    }, [isAuthenticated, currentPage, searchTerm, statusFilter, categoryFilter]);
+
+    const loadCategories = async () => {
+        try {
+            const response = await axiosInstance.get('/products/categories/list');
+            if (response.data.success) {
+                setCategories(response.data.data);
+            }
+        } catch (error) {
+            console.error('Error loading categories:', error);
+        }
+    };
 
     const loadProducts = async () => {
         try {
@@ -34,6 +53,9 @@ export default function ListProducts() {
             });
             if (statusFilter !== 'all') {
                 params.append('status', statusFilter);
+            }
+            if (categoryFilter !== 'all') {
+                params.append('categoryID', categoryFilter);
             }
             const response = await axiosInstance.get(`/products/list?${params.toString()}`);
 
@@ -57,6 +79,11 @@ export default function ListProducts() {
 
     const handleStatusFilterChange = (e) => {
         setStatusFilter(e.target.value);
+        setCurrentPage(1); // Reset to first page when filtering
+    };
+
+    const handleCategoryFilterChange = (e) => {
+        setCategoryFilter(e.target.value);
         setCurrentPage(1); // Reset to first page when filtering
     };
 
@@ -141,6 +168,9 @@ export default function ListProducts() {
                                             if (statusFilter !== 'all') {
                                                 exportParams.append('status', statusFilter);
                                             }
+                                            if (categoryFilter !== 'all') {
+                                                exportParams.append('categoryID', categoryFilter);
+                                            }
                                             const { data } = await axiosInstance.get(`/products/list?${exportParams.toString()}`);
                                             if (!data?.success) break;
                                             const batch = data?.data?.products || [];
@@ -210,6 +240,20 @@ export default function ListProducts() {
                                     onChange={handleSearch}
                                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                                 />
+                            </div>
+                            <div className="w-48">
+                                <select
+                                    value={categoryFilter}
+                                    onChange={handleCategoryFilterChange}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                                >
+                                    <option value="all">All Categories</option>
+                                    {categories.map((category) => (
+                                        <option key={category.categoryID} value={category.categoryID}>
+                                            {category.categoryName}
+                                        </option>
+                                    ))}
+                                </select>
                             </div>
                             <div className="w-48">
                                 <select

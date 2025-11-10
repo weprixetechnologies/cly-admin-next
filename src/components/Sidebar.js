@@ -37,7 +37,6 @@ const Sidebar = () => {
             hasSubmenu: true,
             submenu: [
                 { name: 'Add Product', href: '/products/add' },
-                { name: 'Edit Product', href: '/products/edit' },
                 { name: 'List Product', href: '/products/list' }
             ]
         },
@@ -158,77 +157,104 @@ const Sidebar = () => {
     };
 
     return (
-        <div className="w-64 bg-slate-900 h-screen fixed left-0 top-0 z-40 flex flex-col">
+        <div className="w-64 bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 h-screen fixed left-0 top-0 z-40 flex flex-col shadow-2xl border-r border-slate-700/50 backdrop-blur-sm">
             {/* Logo/Brand */}
-            <div className="p-6 border-b border-slate-700 flex-shrink-0">
-                <h1 className="text-white text-xl font-bold">Cursive Letters Seller</h1>
+            <div className="p-6 border-b border-slate-700/50 flex-shrink-0 bg-gradient-to-r from-slate-800/50 to-slate-900/50 backdrop-blur-sm">
+                <h1 className="text-white text-xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+                    Cursive Letters Seller
+                </h1>
+                <p className="text-slate-400 text-xs mt-1">Admin Dashboard</p>
             </div>
 
             {/* Menu Items - Scrollable Container */}
-            <div className="flex-1 overflow-y-auto">
+            <div className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar">
                 <nav className="mt-6">
-                    <div className="px-4">
-                        <h3 className="text-slate-300 text-xs font-semibold uppercase tracking-wider mb-3">
+                    <div className="px-4 mb-4">
+                        <h3 className="text-slate-400 text-xs font-semibold uppercase tracking-wider mb-3 px-2">
                             Menu
                         </h3>
                     </div>
 
-                    <ul className="space-y-1 px-3 pb-4">
+                    <ul className="space-y-1.5 px-3 pb-4">
                         {menuItems.map((item) => (
                             <li key={item.name}>
                                 {item.hasSubmenu ? (
                                     <div>
                                         <button
                                             onClick={() => toggleMenu(item.name)}
-                                            className={`w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200 ${isSubmenuActive(item.submenu)
-                                                ? 'bg-blue-600 text-white'
-                                                : 'text-slate-200 hover:bg-slate-700 hover:text-white'
+                                            className={`group w-full flex items-center justify-between px-4 py-3 text-sm font-medium rounded-lg transition-all duration-300 relative overflow-hidden ${isSubmenuActive(item.submenu)
+                                                    ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg shadow-blue-500/30'
+                                                    : 'text-slate-300 hover:text-white hover:bg-slate-700/50 hover:shadow-md'
                                                 }`}
                                         >
-                                            <div className="flex items-center">
-                                                <span className="mr-3">{item.icon}</span>
-                                                {item.name}
+                                            <div className="flex items-center relative z-10">
+                                                <span className={`mr-3 transition-transform duration-300 ${isSubmenuActive(item.submenu) ? 'scale-110' : 'group-hover:scale-110'}`}>
+                                                    {item.icon}
+                                                </span>
+                                                <span className="relative">{item.name}</span>
                                             </div>
                                             <svg
-                                                className={`w-4 h-4 transition-transform duration-200 ${expandedMenus[item.name] ? 'rotate-180' : ''
-                                                    }`}
+                                                className={`w-4 h-4 transition-all duration-300 relative z-10 ${expandedMenus[item.name] ? 'rotate-180' : ''
+                                                    } ${isSubmenuActive(item.submenu) ? 'text-white' : 'text-slate-400 group-hover:text-white'}`}
                                                 fill="none"
                                                 stroke="currentColor"
                                                 viewBox="0 0 24 24"
                                             >
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                                             </svg>
+                                            {isSubmenuActive(item.submenu) && (
+                                                <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-blue-400 to-purple-400 rounded-r-full"></div>
+                                            )}
                                         </button>
 
                                         {/* Submenu */}
-                                        {expandedMenus[item.name] && (
-                                            <ul className="mt-1 space-y-1 ml-6">
+                                        <div className={`overflow-hidden transition-all duration-300 ease-in-out ${expandedMenus[item.name] ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+                                            }`}>
+                                            <ul className="mt-1.5 space-y-1 ml-4 pl-4 border-l-2 border-slate-700/50">
                                                 {item.submenu.map((subItem) => (
                                                     <li key={subItem.name}>
                                                         <Link
                                                             href={subItem.href}
-                                                            className={`block px-3 py-2 text-sm rounded-md transition-colors duration-200 ${isActive(subItem.href)
-                                                                ? 'bg-transparent text-white border border-white'
-                                                                : 'text-slate-300 hover:bg-slate-700 hover:text-white'
+                                                            className={`group relative block px-4 py-2.5 text-sm rounded-lg transition-all duration-300 ${isActive(subItem.href)
+                                                                    ? 'bg-gradient-to-r from-blue-600/20 to-purple-600/20 text-white border-l-2 border-blue-400 shadow-md'
+                                                                    : 'text-slate-400 hover:text-white hover:bg-slate-700/30 hover:translate-x-1'
                                                                 }`}
                                                         >
-                                                            {subItem.name}
+                                                            <span className="relative z-10 flex items-center">
+                                                                <span className={`w-1.5 h-1.5 rounded-full mr-3 transition-all duration-300 ${isActive(subItem.href)
+                                                                        ? 'bg-blue-400 shadow-lg shadow-blue-400/50'
+                                                                        : 'bg-slate-500 group-hover:bg-slate-300'
+                                                                    }`}></span>
+                                                                {subItem.name}
+                                                            </span>
+                                                            {isActive(subItem.href) && (
+                                                                <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-purple-600/10 rounded-lg"></div>
+                                                            )}
                                                         </Link>
                                                     </li>
                                                 ))}
                                             </ul>
-                                        )}
+                                        </div>
                                     </div>
                                 ) : (
                                     <Link
                                         href={item.href}
-                                        className={`flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200 ${isActive(item.href)
-                                            ? 'bg-blue-600 text-white'
-                                            : 'text-slate-200 hover:bg-slate-700 hover:text-white'
+                                        className={`group relative flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-300 overflow-hidden ${isActive(item.href)
+                                                ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg shadow-blue-500/30'
+                                                : 'text-slate-300 hover:text-white hover:bg-slate-700/50 hover:shadow-md'
                                             }`}
                                     >
-                                        <span className="mr-3">{item.icon}</span>
-                                        {item.name}
+                                        <span className={`mr-3 transition-transform duration-300 relative z-10 ${isActive(item.href) ? 'scale-110' : 'group-hover:scale-110'
+                                            }`}>
+                                            {item.icon}
+                                        </span>
+                                        <span className="relative z-10">{item.name}</span>
+                                        {isActive(item.href) && (
+                                            <>
+                                                <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-blue-400 to-purple-400 rounded-r-full"></div>
+                                                <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-purple-600/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                                            </>
+                                        )}
                                     </Link>
                                 )}
                             </li>
@@ -238,15 +264,26 @@ const Sidebar = () => {
             </div>
 
             {/* User Profile Section */}
-            <div className="p-4 border-t border-slate-700 flex-shrink-0">
-                <div className="flex items-center">
-                    <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
-                        <span className="text-white text-sm font-medium">A</span>
+            <div className="p-4 border-t border-slate-700/50 flex-shrink-0 bg-gradient-to-r from-slate-800/50 to-slate-900/50 backdrop-blur-sm">
+                <div className="flex items-center p-3 rounded-lg bg-slate-800/50 hover:bg-slate-700/50 transition-all duration-300 cursor-pointer group">
+                    <div className="relative">
+                        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-full flex items-center justify-center shadow-lg shadow-blue-500/30 group-hover:shadow-xl group-hover:shadow-blue-500/50 transition-all duration-300 group-hover:scale-110">
+                            <span className="text-white text-sm font-bold">A</span>
+                        </div>
+                        <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-green-400 border-2 border-slate-800 rounded-full"></div>
                     </div>
-                    <div className="ml-3">
-                        <p className="text-white text-sm font-medium">Admin User</p>
-                        <p className="text-slate-300 text-xs">admin@example.com</p>
+                    <div className="ml-3 flex-1 min-w-0">
+                        <p className="text-white text-sm font-semibold truncate">Admin User</p>
+                        <p className="text-slate-400 text-xs truncate">admin@example.com</p>
                     </div>
+                    <svg
+                        className="w-4 h-4 text-slate-400 group-hover:text-white transition-colors duration-300"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                    >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
                 </div>
             </div>
         </div>
