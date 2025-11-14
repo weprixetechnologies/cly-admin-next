@@ -159,7 +159,7 @@ const AddSliderPage = () => {
                                     className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                 />
                                 <p className="mt-1 text-sm text-gray-500">
-                                    Recommended size: 243x360px or similar mobile format
+                                    Recommended size: 243x300px or similar mobile format
                                 </p>
 
                                 <div className="mt-4">
