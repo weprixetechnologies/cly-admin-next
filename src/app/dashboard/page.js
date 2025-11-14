@@ -14,7 +14,10 @@ export default function Dashboard() {
         activeProducts: 0,
         activeUsers: 0,
         recentProducts: 0,
-        recentUsers: 0
+        recentUsers: 0,
+        todayVisitors: 0,
+        weekVisitors: 0,
+        monthVisitors: 0
     });
     const [analytics, setAnalytics] = useState(null);
     const [products, setProducts] = useState([]);
@@ -62,6 +65,18 @@ export default function Dashboard() {
             const usersResponse = await axiosInstance.get('/users?page=1&limit=5');
             if (usersResponse.data.success) {
                 setUsers(usersResponse.data.users);
+            }
+
+            // Load visitor stats
+            const visitorsResponse = await axiosInstance.get('/visitors/stats');
+            if (visitorsResponse.data.success) {
+                const visitorStats = visitorsResponse.data.data;
+                setStats(prev => ({
+                    ...prev,
+                    todayVisitors: visitorStats.todayVisitors,
+                    weekVisitors: visitorStats.weekVisitors,
+                    monthVisitors: visitorStats.monthVisitors
+                }));
             }
 
         } catch (error) {
@@ -255,6 +270,51 @@ export default function Dashboard() {
                                 <p className="text-sm font-medium text-slate-600">Completed Orders</p>
                                 <p className="text-2xl font-semibold text-gray-900">{analytics?.orders?.completedOrders || 0}</p>
                                 <p className="text-xs text-gray-500">Successfully delivered</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Visitor Stats Row */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow-lg p-6 text-white">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-blue-100 text-sm font-medium">Today Visitors</p>
+                                <p className="text-3xl font-bold mt-2">{stats.todayVisitors}</p>
+                            </div>
+                            <div className="bg-blue-400/20 rounded-full p-3">
+                                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-lg shadow-lg p-6 text-white">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-green-100 text-sm font-medium">This Week Visitors</p>
+                                <p className="text-3xl font-bold mt-2">{stats.weekVisitors}</p>
+                            </div>
+                            <div className="bg-green-400/20 rounded-full p-3">
+                                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg shadow-lg p-6 text-white">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-purple-100 text-sm font-medium">This Month Visitors</p>
+                                <p className="text-3xl font-bold mt-2">{stats.monthVisitors}</p>
+                            </div>
+                            <div className="bg-purple-400/20 rounded-full p-3">
+                                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
                             </div>
                         </div>
                     </div>
