@@ -24,8 +24,24 @@ const AddSliderPage = () => {
     const pullZoneUrl = 'https://cly-pull-bunny.b-cdn.net';
     const apiKey = '22cfd8b3-8021-40a3-b100a9d48bc0-7dc3-4654'; // ⚠️ Dev only
 
+    const generateUniqueId = () => {
+        const timestamp = Date.now();
+        const random = Math.random().toString(36).substring(2, 15);
+        return `${timestamp}-${random}`;
+    };
+
     const uploadToBunny = async (file, subFolder) => {
-        const safeName = encodeURIComponent(file.name.replace(/\s+/g, '_'));
+        // Get file extension
+        const fileExtension = file.name.split('.').pop();
+        const fileNameWithoutExt = file.name.replace(/\.[^/.]+$/, '').replace(/\s+/g, '_');
+
+        // Generate unique ID
+        const uniqueId = generateUniqueId();
+
+        // Create filename with unique ID: originalname-uniqueid.ext
+        const uniqueFileName = `${fileNameWithoutExt}-${uniqueId}.${fileExtension}`;
+        const safeName = encodeURIComponent(uniqueFileName);
+
         const path = subFolder ? `${storageZone}/${subFolder}/${safeName}` : `${storageZone}/${safeName}`;
         const uploadUrl = `https://${storageRegion}/${path}`;
         const publicUrl = `${pullZoneUrl}/${subFolder ? `${subFolder}/` : ''}${safeName}`;
