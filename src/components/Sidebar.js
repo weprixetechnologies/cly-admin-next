@@ -1,12 +1,20 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
-const Sidebar = () => {
+const Sidebar = ({ isOpen, onClose }) => {
     const [expandedMenus, setExpandedMenus] = useState({});
     const pathname = usePathname();
+
+    // Close sidebar when route changes on mobile
+    useEffect(() => {
+        if (isOpen && typeof window !== 'undefined' && window.innerWidth < 1024) {
+            onClose();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [pathname]);
 
     const toggleMenu = (menuName) => {
         setExpandedMenus(prev => ({
@@ -168,14 +176,39 @@ const Sidebar = () => {
     };
 
     return (
-        <div className="w-64 bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 h-screen fixed left-0 top-0 z-40 flex flex-col shadow-2xl border-r border-slate-700/50 backdrop-blur-sm">
-            {/* Logo/Brand */}
-            <div className="p-6 border-b border-slate-700/50 flex-shrink-0 bg-gradient-to-r from-slate-800/50 to-slate-900/50 backdrop-blur-sm">
-                <h1 className="text-white text-xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-                    Cursive Letters Seller
-                </h1>
-                <p className="text-slate-400 text-xs mt-1">Admin Dashboard</p>
-            </div>
+        <>
+            {/* Mobile Overlay */}
+            {isOpen && (
+                <div 
+                    className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+                    onClick={onClose}
+                />
+            )}
+            
+            {/* Sidebar */}
+            <div className={`w-64 bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 h-screen fixed left-0 top-0 z-50 flex flex-col shadow-2xl border-r border-slate-700/50 backdrop-blur-sm transform transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
+                {/* Mobile Close Button */}
+                <div className="lg:hidden flex items-center justify-between p-4 border-b border-slate-700/50">
+                    <h1 className="text-white text-lg font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+                        Cursive Letters Seller
+                    </h1>
+                    <button
+                        onClick={onClose}
+                        className="text-slate-300 hover:text-white p-2"
+                    >
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                {/* Logo/Brand */}
+                <div className="p-6 border-b border-slate-700/50 flex-shrink-0 bg-gradient-to-r from-slate-800/50 to-slate-900/50 backdrop-blur-sm hidden lg:block">
+                    <h1 className="text-white text-xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+                        Cursive Letters Seller
+                    </h1>
+                    <p className="text-slate-400 text-xs mt-1">Admin Dashboard</p>
+                </div>
 
             {/* Menu Items - Scrollable Container */}
             <div className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar">
@@ -298,6 +331,7 @@ const Sidebar = () => {
                 </div>
             </div>
         </div>
+        </>
     );
 };
 

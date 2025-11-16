@@ -81,16 +81,16 @@ export default function Visitors() {
     return (
         <div className="min-h-screen bg-gray-50">
             <header className="bg-white shadow-sm border-b">
-                <div className="px-6 py-4">
-                    <h1 className="text-2xl font-bold text-gray-800">Visitors</h1>
-                    <p className="text-sm text-gray-600">Track and analyze website visitors</p>
+                <div className="px-4 sm:px-6 py-4">
+                    <h1 className="text-xl sm:text-2xl font-bold text-gray-800">Visitors</h1>
+                    <p className="text-xs sm:text-sm text-gray-600">Track and analyze website visitors</p>
                 </div>
             </header>
 
-            <main className="p-6">
+            <main className="p-4 sm:p-6">
                 {/* Stats Section */}
                 {stats && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
                         <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow-lg p-6 text-white">
                             <div className="flex items-center justify-between">
                                 <div>
@@ -152,7 +152,7 @@ export default function Visitors() {
                 )}
 
                 {/* Search Bar */}
-                <div className="bg-white rounded-lg shadow-md p-4 mb-6">
+                <div className="bg-white rounded-lg shadow-md p-4 mb-4 sm:mb-6">
                     <div className="flex items-center space-x-4">
                         <div className="flex-1">
                             <input
@@ -160,7 +160,7 @@ export default function Visitors() {
                                 placeholder="Search by Visitor ID, IP, or Date..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
                         </div>
                     </div>
@@ -172,13 +172,13 @@ export default function Visitors() {
                         <table className="min-w-full divide-y divide-gray-200">
                             <thead className="bg-gray-50">
                                 <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                         Visitor ID
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                         IP Address
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                         Visited On
                                     </th>
                                 </tr>
@@ -186,20 +186,20 @@ export default function Visitors() {
                             <tbody className="bg-white divide-y divide-gray-200">
                                 {filteredVisitors.length === 0 ? (
                                     <tr>
-                                        <td colSpan="3" className="px-6 py-4 text-center text-gray-500">
+                                        <td colSpan="3" className="px-3 sm:px-6 py-4 text-center text-gray-500 text-sm">
                                             No visitors found
                                         </td>
                                     </tr>
                                 ) : (
                                     filteredVisitors.map((visitor) => (
                                         <tr key={visitor.visitorID} className="hover:bg-gray-50">
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                            <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm font-medium text-gray-900">
                                                 #{visitor.visitorID}
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500">
                                                 {visitor.ip}
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500">
                                                 {formatDate(visitor.visitedOn)}
                                             </td>
                                         </tr>
@@ -211,22 +211,22 @@ export default function Visitors() {
 
                     {/* Pagination */}
                     {totalPages > 1 && (
-                        <div className="bg-gray-50 px-6 py-4 flex items-center justify-between border-t border-gray-200">
-                            <div className="text-sm text-gray-700">
+                        <div className="bg-gray-50 px-3 sm:px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-gray-200">
+                            <div className="text-xs sm:text-sm text-gray-700">
                                 Page {currentPage} of {totalPages}
                             </div>
                             <div className="flex space-x-2">
                                 <button
                                     onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                                     disabled={currentPage === 1}
-                                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     Previous
                                 </button>
                                 <button
                                     onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                                     disabled={currentPage === totalPages}
-                                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     Next
                                 </button>

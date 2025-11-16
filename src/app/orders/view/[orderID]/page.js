@@ -650,67 +650,69 @@ export default function OrderDetails({ params }) {
     return (
         <>
             <header className="bg-white shadow-sm border-b">
-                <div className="px-6 py-4 flex items-center justify-between">
-                    <div>
-                        <h1 className="text-2xl font-bold text-gray-900">Order {orderID}</h1>
-                        <p className="text-sm text-gray-700">Status: <span className="font-semibold text-gray-900">{orderStatus}</span> • Items: {totalItems}</p>
-                    </div>
-                    <div className="flex gap-2 items-center">
-                        {orderStatus === 'pending' || forceChange ? (
-                            <>
-                                <button disabled={saving} onClick={() => updateStatus('pending')} className="px-3 py-2 text-sm rounded border bg-white text-gray-900 hover:bg-gray-100 disabled:opacity-50">Pending</button>
-                                <button disabled={saving} onClick={() => updateStatus('accepted')} className="px-3 py-2 text-sm rounded border bg-green-600 text-white hover:bg-green-700 disabled:opacity-50">Accept</button>
-                                <button disabled={saving} onClick={() => updateStatus('rejected')} className="px-3 py-2 text-sm rounded border bg-red-600 text-white hover:bg-red-700 disabled:opacity-50">Reject</button>
-                            </>
-                        ) : (
-                            <span className={`px-3 py-2 text-sm font-semibold rounded-full ${orderStatus === 'accepted' ? 'bg-green-100 text-green-800' : orderStatus === 'rejected' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'}`}>
-                                Status Already Updated
-                            </span>
-                        )}
-                        <button
-                            onClick={exportToExcel}
-                            disabled={exporting || orderItems.length === 0}
-                            className="px-4 py-2 text-sm rounded border bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
-                        >
-                            {exporting ? (
+                <div className="px-4 sm:px-6 py-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                        <div>
+                            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Order {orderID}</h1>
+                            <p className="text-xs sm:text-sm text-gray-700">Status: <span className="font-semibold text-gray-900">{orderStatus}</span> • Items: {totalItems}</p>
+                        </div>
+                        <div className="flex flex-wrap gap-2 items-center">
+                            {orderStatus === 'pending' || forceChange ? (
                                 <>
-                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                                    Exporting...
+                                    <button disabled={saving} onClick={() => updateStatus('pending')} className="px-2 sm:px-3 py-2 text-xs sm:text-sm rounded border bg-white text-gray-900 hover:bg-gray-100 disabled:opacity-50">Pending</button>
+                                    <button disabled={saving} onClick={() => updateStatus('accepted')} className="px-2 sm:px-3 py-2 text-xs sm:text-sm rounded border bg-green-600 text-white hover:bg-green-700 disabled:opacity-50">Accept</button>
+                                    <button disabled={saving} onClick={() => updateStatus('rejected')} className="px-2 sm:px-3 py-2 text-xs sm:text-sm rounded border bg-red-600 text-white hover:bg-red-700 disabled:opacity-50">Reject</button>
                                 </>
                             ) : (
-                                <>
-                                    📊 Export Excel
-                                </>
+                                <span className={`px-2 sm:px-3 py-2 text-xs sm:text-sm font-semibold rounded-full ${orderStatus === 'accepted' ? 'bg-green-100 text-green-800' : orderStatus === 'rejected' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'}`}>
+                                    Status Already Updated
+                                </span>
                             )}
-                        </button>
-                        <button
-                            onClick={() => setShowInvoice(true)}
-                            disabled={orderItems.length === 0}
-                            className="px-4 py-2 text-sm rounded border bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 flex items-center gap-2"
-                        >
-                            📄 Generate Invoice
-                        </button>
-                        <button
-                            onClick={generateInvoicePDF}
-                            disabled={generatingPDF || orderItems.length === 0}
-                            className="px-4 py-2 text-sm rounded border bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 flex items-center gap-2"
-                        >
-                            {generatingPDF ? (
-                                <>
-                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                                    Generating...
-                                </>
-                            ) : (
-                                <>
-                                    📄 Download PDF
-                                </>
-                            )}
-                        </button>
+                            <button
+                                onClick={exportToExcel}
+                                disabled={exporting || orderItems.length === 0}
+                                className="px-3 sm:px-4 py-2 text-xs sm:text-sm rounded border bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
+                            >
+                                {exporting ? (
+                                    <>
+                                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                                        Exporting...
+                                    </>
+                                ) : (
+                                    <>
+                                        📊 Export Excel
+                                    </>
+                                )}
+                            </button>
+                            <button
+                                onClick={() => setShowInvoice(true)}
+                                disabled={orderItems.length === 0}
+                                className="px-3 sm:px-4 py-2 text-xs sm:text-sm rounded border bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 flex items-center gap-2"
+                            >
+                                📄 Generate Invoice
+                            </button>
+                            <button
+                                onClick={generateInvoicePDF}
+                                disabled={generatingPDF || orderItems.length === 0}
+                                className="px-3 sm:px-4 py-2 text-xs sm:text-sm rounded border bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 flex items-center gap-2"
+                            >
+                                {generatingPDF ? (
+                                    <>
+                                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                                        Generating...
+                                    </>
+                                ) : (
+                                    <>
+                                        📄 Download PDF
+                                    </>
+                                )}
+                            </button>
+                        </div>
                     </div>
                 </div>
             </header>
 
-            <main className="p-6 space-y-6">
+            <main className="p-4 sm:p-6 space-y-4 sm:space-y-6">
                 {/* Order meta */}
                 <div className="bg-white rounded-lg shadow">
                     <div className="p-6 border-b">

@@ -129,17 +129,17 @@ export default function AllUsers() {
     return (
         <div className="min-h-screen bg-gray-50">
             <header className="bg-white shadow-sm border-b">
-                <div className="px-6 py-4">
-                    <h1 className="text-2xl font-bold text-gray-800">All Users</h1>
-                    <p className="text-sm text-gray-600">Manage all registered users</p>
+                <div className="px-4 sm:px-6 py-4">
+                    <h1 className="text-xl sm:text-2xl font-bold text-gray-800">All Users</h1>
+                    <p className="text-xs sm:text-sm text-gray-600">Manage all registered users</p>
                 </div>
             </header>
 
-            <main className="p-6">
+            <main className="p-4 sm:p-6">
                 {/* Stats Section */}
                 {stats && (
                     <>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4 sm:mb-6">
                             <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow-lg p-6 text-white">
                                 <div className="flex items-center justify-between">
                                     <div>

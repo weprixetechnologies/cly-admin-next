@@ -77,12 +77,12 @@ export default function AcceptedOrders() {
     return (
         <div className="min-h-screen">
             <header className="bg-white shadow-sm border-b">
-                <div className="px-6 py-4">
-                    <h1 className="text-2xl font-bold text-gray-800">Accepted Orders</h1>
+                <div className="px-4 sm:px-6 py-4">
+                    <h1 className="text-xl sm:text-2xl font-bold text-gray-800">Accepted Orders</h1>
                 </div>
             </header>
 
-            <main className="p-6">
+            <main className="p-4 sm:p-6">
                 <div className="bg-white rounded-lg shadow p-6">
                     <div className="flex justify-between items-center mb-6">
                         <h2 className="text-lg font-medium text-gray-900">Accepted Orders</h2>

@@ -104,12 +104,12 @@ export default function AllOrders() {
     return (
         <div className="min-h-screen">
             <header className="bg-white shadow-sm border-b">
-                <div className="px-6 py-4">
-                    <h1 className="text-2xl font-bold text-gray-800">All Orders</h1>
+                <div className="px-4 sm:px-6 py-4">
+                    <h1 className="text-xl sm:text-2xl font-bold text-gray-800">All Orders</h1>
                 </div>
             </header>
 
-            <main className="p-6 w-full">
+            <main className="p-4 sm:p-6 w-full">
                 {/* Statistics Dashboard */}
                 {statistics && (
                     <div className="mb-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
