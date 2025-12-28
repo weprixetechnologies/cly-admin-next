@@ -20,6 +20,7 @@ export default function OrderDetails({ params }) {
     const [generatingPDF, setGeneratingPDF] = useState(false)
     const [editingItem, setEditingItem] = useState(null)
     const [acceptedUnits, setAcceptedUnits] = useState({})
+    const [customPrices, setCustomPrices] = useState({})
     const [adminNotes, setAdminNotes] = useState({})
     const [orderPayment, setOrderPayment] = useState(null)
     const [editingPayment, setEditingPayment] = useState(false)
@@ -101,12 +102,22 @@ export default function OrderDetails({ params }) {
             const accepted = acceptedUnits[productID] === '' ? 0 : (acceptedUnits[productID] || 0)
             const notes = adminNotes[productID] || ''
 
-            const { data } = await axios.put(`/order/admin/acceptance`, {
+            const payload = {
                 orderID,
                 productID,
                 acceptedUnits: accepted,
                 adminNotes: notes
-            })
+            }
+
+            const priceValue = customPrices[productID]
+            if (priceValue !== undefined && priceValue !== null && priceValue !== '') {
+                const parsed = parseFloat(priceValue)
+                if (!isNaN(parsed)) {
+                    payload.customPrice = parsed
+                }
+            }
+
+            const { data } = await axios.put(`/order/admin/acceptance`, payload)
 
             if (data?.success) {
                 // Refresh order data
@@ -115,6 +126,7 @@ export default function OrderDetails({ params }) {
                 setEditingItem(null)
                 setAcceptedUnits({})
                 setAdminNotes({})
+                setCustomPrices({})
             } else {
                 console.error('[PartialAcceptance] API error:', data.message)
                 alert('Failed to update acceptance: ' + data.message)
@@ -131,12 +143,22 @@ export default function OrderDetails({ params }) {
         try {
             setSaving(true)
 
-            const { data } = await axios.put(`/order/admin/acceptance`, {
+            const payload = {
                 orderID,
                 productID,
                 acceptedUnits: requestedUnits,
                 adminNotes: (adminNotes[productID] || '')
-            })
+            }
+
+            const priceValue = customPrices[productID]
+            if (priceValue !== undefined && priceValue !== null && priceValue !== '') {
+                const parsed = parseFloat(priceValue)
+                if (!isNaN(parsed)) {
+                    payload.customPrice = parsed
+                }
+            }
+
+            const { data } = await axios.put(`/order/admin/acceptance`, payload)
 
             if (data?.success) {
                 // Refresh order data
@@ -161,6 +183,13 @@ export default function OrderDetails({ params }) {
         }))
     }
 
+    const handlePriceChange = (productID, value) => {
+        setCustomPrices(prev => ({
+            ...prev,
+            [productID]: value
+        }))
+    }
+
     const handleNotesChange = (productID, value) => {
         setAdminNotes(prev => ({
             ...prev,
@@ -169,6 +198,7 @@ export default function OrderDetails({ params }) {
     }
 
     const getAcceptanceStatus = (item) => {
+        if (item.acceptance_status === 'increased') return 'Increased'
         if (item.acceptance_status === 'full') return 'Full'
         if (item.acceptance_status === 'partial') return 'Partial'
         if (item.acceptance_status === 'rejected') return 'Rejected'
@@ -176,6 +206,7 @@ export default function OrderDetails({ params }) {
     }
 
     const getAcceptanceColor = (item) => {
+        if (item.acceptance_status === 'increased') return 'bg-blue-100 text-blue-800'
         if (item.acceptance_status === 'full') return 'bg-green-100 text-green-800'
         if (item.acceptance_status === 'partial') return 'bg-yellow-100 text-yellow-800'
         if (item.acceptance_status === 'rejected') return 'bg-red-100 text-red-800'
@@ -560,7 +591,7 @@ export default function OrderDetails({ params }) {
                 }
 
                 const quantity = Number(item.accepted_units || item.requested_units || item.units || 0)
-                const price = Number(item.pItemPrice || item.productPrice || 0)
+                const price = Number(item.final_price ?? item.pItemPrice ?? item.productPrice ?? 0)
                 const total = quantity * price
                 grandTotal += total
 
@@ -765,7 +796,67 @@ export default function OrderDetails({ params }) {
                             </div>
                         </div>
                         <div>
-                            <div className="text-gray-700">Subtotal</div>
+                            <div className="text-gray-700">Item Total (Accepted)</div>
+                            <div className="font-medium text-gray-900">
+                                {(() => {
+                                    if (!orderItems || orderItems.length === 0) return '₹0.00'
+                                    const total = orderItems.reduce((sum, it) => {
+                                        const qty = Number(it.accepted_units || it.units || 0)
+                                        const price = Number(it.final_price ?? it.pItemPrice ?? it.productPrice ?? 0)
+                                        if (!Number.isFinite(qty) || !Number.isFinite(price)) return sum
+                                        return sum + qty * price
+                                    }, 0)
+                                    return `₹${total.toFixed(2)}`
+                                })()}
+                            </div>
+                        </div>
+                        <div>
+                            <div className="text-gray-700">Shipping Charge</div>
+                            <div className="flex items-center gap-2">
+                                <input
+                                    type="number"
+                                    min="0"
+                                    step="0.01"
+                                    value={orderItems[0]?.shipping_charge ?? 0}
+                                    onChange={(e) => {
+                                        const value = e.target.value
+                                        setOrderItems(prev => {
+                                            if (!prev || prev.length === 0) return prev
+                                            return prev.map((it) => ({
+                                                ...it,
+                                                shipping_charge: value
+                                            }))
+                                        })
+                                    }}
+                                    onBlur={async (e) => {
+                                        try {
+                                            const value = e.target.value
+                                            const parsed = parseFloat(value)
+                                            if (isNaN(parsed) || parsed < 0) {
+                                                alert('Invalid shipping charge')
+                                                return
+                                            }
+                                            const { data } = await axios.put(`/order/admin/${orderID}/shipping`, {
+                                                shippingCharge: parsed
+                                            })
+                                            if (data?.success) {
+                                                const { data: orderData } = await axios.get(`/order/admin/${orderID}`)
+                                                setOrderItems(orderData?.data || [])
+                                            } else {
+                                                alert(data?.message || 'Failed to update shipping charge')
+                                            }
+                                        } catch (error) {
+                                            console.error('Update shipping failed:', error)
+                                            alert('Failed to update shipping charge. Please try again.')
+                                        }
+                                    }}
+                                    className="w-24 px-2 py-1 border rounded text-sm"
+                                    disabled={isLocked}
+                                />
+                            </div>
+                        </div>
+                        <div>
+                            <div className="text-gray-700">Total (Items + Shipping)</div>
                             <div className="font-medium text-gray-900">₹{orderItems[0]?.order_amount || '0.00'}</div>
                         </div>
                         <div>
@@ -818,6 +909,7 @@ export default function OrderDetails({ params }) {
                                     <th className="px-4 py-2 text-left text-xs font-semibold text-gray-800 uppercase tracking-wider">Requested</th>
                                     <th className="px-4 py-2 text-left text-xs font-semibold text-gray-800 uppercase tracking-wider">Accepted</th>
                                     <th className="px-4 py-2 text-left text-xs font-semibold text-gray-800 uppercase tracking-wider">Status</th>
+                                    <th className="px-4 py-2 text-left text-xs font-semibold text-gray-800 uppercase tracking-wider">Unit Price</th>
                                     <th className="px-4 py-2 text-left text-xs font-semibold text-gray-800 uppercase tracking-wider">Amount</th>
                                     <th className="px-4 py-2 text-left text-xs font-semibold text-gray-800 uppercase tracking-wider">Actions</th>
                                 </tr>
@@ -862,8 +954,44 @@ export default function OrderDetails({ params }) {
                                             </span>
                                         </td>
                                         <td className="px-4 py-2 text-sm text-gray-900">
-                                            <div className="font-medium">₹{((it.pItemPrice || it.productPrice || 0) * (it.accepted_units || it.units || 0)).toFixed(2)}</div>
-                                            <div className="text-xs text-gray-500">₹{it.pItemPrice || it.productPrice || '0.00'} × {(it.accepted_units || it.units || 0)}</div>
+                                            {editingItem === it.productID ? (
+                                                <input
+                                                    type="number"
+                                                    min="0"
+                                                    step="0.01"
+                                                    value={
+                                                        customPrices[it.productID] !== undefined
+                                                            ? customPrices[it.productID]
+                                                            : (it.final_price ?? it.pItemPrice ?? it.productPrice ?? 0)
+                                                    }
+                                                    onChange={(e) => handlePriceChange(it.productID, e.target.value)}
+                                                    className="w-24 px-2 py-1 border rounded text-sm"
+                                                    disabled={isLocked}
+                                                />
+                                            ) : (
+                                                <div>
+                                                    <div className="font-medium">
+                                                        ₹{Number(it.final_price ?? it.pItemPrice ?? it.productPrice ?? 0).toFixed(2)}
+                                                    </div>
+                                                    <div className="text-xs text-gray-500">per unit</div>
+                                                </div>
+                                            )}
+                                        </td>
+                                        <td className="px-4 py-2 text-sm text-gray-900">
+                                            <div className="font-medium">
+                                                {(() => {
+                                                    const qty = Number(it.accepted_units || it.units || 0)
+                                                    const unitPrice = Number(it.final_price ?? it.pItemPrice ?? it.productPrice ?? 0)
+                                                    return `₹${(qty * unitPrice).toFixed(2)}`
+                                                })()}
+                                            </div>
+                                            <div className="text-xs text-gray-500">
+                                                {(() => {
+                                                    const qty = Number(it.accepted_units || it.units || 0)
+                                                    const unitPrice = Number(it.final_price ?? it.pItemPrice ?? it.productPrice ?? 0)
+                                                    return `₹${unitPrice.toFixed(2)} × ${qty}`
+                                                })()}
+                                            </div>
                                         </td>
                                         <td className="px-4 py-2 text-sm">
                                             {editingItem === it.productID ? (
@@ -1357,11 +1485,11 @@ export default function OrderDetails({ params }) {
                     </div>
                     <div className="p-6">
                         <div className="flex justify-between items-center text-lg font-semibold">
-                            <span className="text-gray-700">Total Amount:</span>
+                            <span className="text-gray-700">Total Amount (Items + Shipping):</span>
                             <span className="text-green-600">₹{orderItems[0]?.order_amount || '0.00'}</span>
                         </div>
                         <div className="mt-2 text-sm text-gray-500">
-                            Amount calculated based on product prices and quantities
+                            Amount includes accepted quantities, custom prices (if any), and shipping charge
                         </div>
                     </div>
                 </div>

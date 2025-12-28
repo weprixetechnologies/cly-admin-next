@@ -31,34 +31,50 @@ const InvoiceViewer = ({ orderID, onClose }) => {
     const downloadInvoice = async () => {
         try {
             setLoading(true);
+            setError('');
 
-            // Open invoice in new window for printing/downloading
-            const response = await axios.get(`/invoice/download/${orderID}`, {
-                responseType: 'blob'
-            });
+            // If we already have the HTML in memory, use that directly to create the file
+            if (invoiceHTML) {
+                const blob = new Blob([invoiceHTML], { type: 'text/html' });
+                const url = window.URL.createObjectURL(blob);
 
-            // Create blob URL and open in new window
-            const blob = new Blob([response.data], { type: 'text/html' });
-            const url = window.URL.createObjectURL(blob);
-            const newWindow = window.open(url, '_blank');
-
-            if (newWindow) {
-                newWindow.focus();
-            } else {
-                // Fallback: download the file
                 const link = document.createElement('a');
                 link.href = url;
                 link.download = `invoice-${orderID}.html`;
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
+
+                setTimeout(() => {
+                    window.URL.revokeObjectURL(url);
+                }, 1000);
+
+                return;
             }
 
-            // Clean up the blob URL after a delay
+            // Fallback: call backend download endpoint if HTML is not yet generated
+            const response = await axios.get(`/invoice/download/${orderID}`, {
+                responseType: 'text',
+            });
+
+            const html = typeof response.data === 'string' ? response.data : '';
+            if (!html) {
+                throw new Error('Empty invoice content');
+            }
+
+            const blob = new Blob([html], { type: 'text/html' });
+            const url = window.URL.createObjectURL(blob);
+
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `invoice-${orderID}.html`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
             setTimeout(() => {
                 window.URL.revokeObjectURL(url);
             }, 1000);
-
         } catch (err) {
             console.error('Invoice download error:', err);
             setError('Failed to download invoice. Please try again.');
