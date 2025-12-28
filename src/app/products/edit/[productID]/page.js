@@ -17,7 +17,8 @@ export default function EditProduct() {
         categoryName: '',
         themeCategory: '',
         inventory: '0',
-        status: 'active'
+        status: 'active',
+        isFeatured: false
     });
     const [featuredImage, setFeaturedImage] = useState(null);
     const [galleryImages, setGalleryImages] = useState([]);
@@ -62,7 +63,8 @@ export default function EditProduct() {
                     categoryName: product.categoryName || '',
                     themeCategory: product.themeCategory || '',
                     inventory: product.inventory || '0',
-                    status: product.status || 'active'
+                    status: product.status || 'active',
+                    isFeatured: product.isFeatured === 1 || product.isFeatured === true
                 });
 
                 // Store original category ID for count updates
@@ -94,10 +96,10 @@ export default function EditProduct() {
     };
 
     const handleInputChange = (e) => {
-        const { name, value } = e.target;
+        const { name, value, type, checked } = e.target;
         setFormData(prev => ({
             ...prev,
-            [name]: value
+            [name]: type === 'checkbox' ? checked : value
         }));
         setError('');
         setSuccess('');
@@ -248,6 +250,7 @@ export default function EditProduct() {
                 themeCategory: formData.themeCategory || null,
                 inventory: formData.inventory,
                 status: formData.status,
+                isFeatured: formData.isFeatured,
                 featuredImages: featuredImageUrl,
                 galleryImages: galleryImageUrls
             };
@@ -372,6 +375,24 @@ export default function EditProduct() {
                                     <option value="inactive">Inactive</option>
                                 </select>
                             </div>
+                        </div>
+
+                        {/* Featured Product */}
+                        <div>
+                            <label className="flex items-center space-x-2">
+                                <input
+                                    type="checkbox"
+                                    id="isFeatured"
+                                    name="isFeatured"
+                                    checked={formData.isFeatured}
+                                    onChange={handleInputChange}
+                                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                />
+                                <span className="text-sm font-medium text-slate-700">Featured Product</span>
+                            </label>
+                            <p className="text-xs text-gray-500 mt-1 ml-6">
+                                Featured products will be displayed in the Featured Products section on the homepage
+                            </p>
                         </div>
 
                         {/* Description */}

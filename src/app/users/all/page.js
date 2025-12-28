@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { isAuthenticated } from '../../../utils/cookies';
 import axios from '../../../utils/axiosInstance';
+import * as XLSX from 'xlsx';
 
 export default function AllUsers() {
     const [loading, setLoading] = useState(true);
@@ -112,6 +113,57 @@ export default function AllUsers() {
             default:
                 return 'bg-gray-100 text-gray-800';
         }
+    };
+
+    const exportToExcel = () => {
+        if (users.length === 0) {
+            alert('No users to export');
+            return;
+        }
+
+        // Prepare data for Excel export
+        const excelData = users.map((user) => ({
+            'UID': user.uid || '',
+            'Name': user.name || '',
+            'Username': user.username || '',
+            'Email': user.emailID || '',
+            'Phone Number': user.phoneNumber || '',
+            'GSTIN': user.gstin || '',
+            'Status': user.approval_status || '',
+            'Role': user.role || '',
+            'Registration Date': user.createdAt ? new Date(user.createdAt).toLocaleDateString() : '',
+            'Approved By': user.approved_by || '',
+            'Approved At': user.approved_at ? new Date(user.approved_at).toLocaleDateString() : '',
+        }));
+
+        // Create a new workbook and worksheet
+        const worksheet = XLSX.utils.json_to_sheet(excelData);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Users');
+
+        // Set column widths
+        const columnWidths = [
+            { wch: 15 }, // UID
+            { wch: 25 }, // Name
+            { wch: 20 }, // Username
+            { wch: 30 }, // Email
+            { wch: 15 }, // Phone Number
+            { wch: 20 }, // GSTIN
+            { wch: 12 }, // Status
+            { wch: 12 }, // Role
+            { wch: 18 }, // Registration Date
+            { wch: 20 }, // Approved By
+            { wch: 18 }, // Approved At
+        ];
+        worksheet['!cols'] = columnWidths;
+
+        // Generate filename with current date
+        const date = new Date();
+        const dateStr = date.toISOString().split('T')[0];
+        const filename = `user-list-${dateStr}.xlsx`;
+
+        // Write the file
+        XLSX.writeFile(workbook, filename);
     };
 
 
@@ -256,6 +308,16 @@ export default function AllUsers() {
                             <h2 className="text-lg font-semibold text-gray-900">
                                 Users ({users.length})
                             </h2>
+                            <button
+                                onClick={exportToExcel}
+                                disabled={users.length === 0}
+                                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                            >
+                                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                                Export User List in Excel
+                            </button>
                         </div>
 
                         {/* Search and Filter Controls */}

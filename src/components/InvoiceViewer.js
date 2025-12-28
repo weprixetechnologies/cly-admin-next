@@ -33,45 +33,24 @@ const InvoiceViewer = ({ orderID, onClose }) => {
             setLoading(true);
             setError('');
 
-            // If we already have the HTML in memory, use that directly to create the file
-            if (invoiceHTML) {
-                const blob = new Blob([invoiceHTML], { type: 'text/html' });
-                const url = window.URL.createObjectURL(blob);
-
-                const link = document.createElement('a');
-                link.href = url;
-                link.download = `invoice-${orderID}.html`;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-
-                setTimeout(() => {
-                    window.URL.revokeObjectURL(url);
-                }, 1000);
-
-                return;
-            }
-
-            // Fallback: call backend download endpoint if HTML is not yet generated
+            // Call backend download endpoint to get PDF
             const response = await axios.get(`/invoice/download/${orderID}`, {
-                responseType: 'text',
+                responseType: 'blob',
             });
 
-            const html = typeof response.data === 'string' ? response.data : '';
-            if (!html) {
-                throw new Error('Empty invoice content');
-            }
-
-            const blob = new Blob([html], { type: 'text/html' });
+            // Create blob from PDF response
+            const blob = new Blob([response.data], { type: 'application/pdf' });
             const url = window.URL.createObjectURL(blob);
 
+            // Create download link
             const link = document.createElement('a');
             link.href = url;
-            link.download = `invoice-${orderID}.html`;
+            link.download = `invoice-${orderID}.pdf`;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
 
+            // Clean up
             setTimeout(() => {
                 window.URL.revokeObjectURL(url);
             }, 1000);
