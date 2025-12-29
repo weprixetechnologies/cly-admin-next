@@ -228,8 +228,8 @@ const RichTextEditor = ({ value, onChange, placeholder = "Enter content..." }) =
         '#000000', '#333333', '#666666', '#999999', '#CCCCCC', '#FFFFFF',
         '#FF0000', '#FF6600', '#FFCC00', '#33FF00', '#0066FF', '#6600FF',
         '#FF0099', '#FF3366', '#FF9900', '#CCFF00', '#00FF66', '#0066FF',
-        '#6633FF', '#CC00FF', '#FF0066', '#FF3300', '#FFCC00', '#99FF00',
-        '#00FFCC', '#0099FF', '#3300FF', '#CC00CC', '#FF0066'
+        '#6633FF', '#CC00FF', '#FF0066', '#FF9878', '#FFCC00', '#99FF00',
+        '#00FFCC', '#0099FF', '#9878FF', '#CC00CC', '#FF0066'
     ];
 
     if (!editor) {

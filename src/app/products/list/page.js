@@ -13,6 +13,7 @@ export default function ListProducts() {
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
     const [categoryFilter, setCategoryFilter] = useState('all');
+    const [featuredFilter, setFeaturedFilter] = useState('all');
     const [categories, setCategories] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
@@ -33,7 +34,7 @@ export default function ListProducts() {
             loadProducts();
             loadStats();
         }
-    }, [isAuthenticated, currentPage, searchTerm, statusFilter, categoryFilter]);
+    }, [isAuthenticated, currentPage, searchTerm, statusFilter, categoryFilter, featuredFilter]);
 
     const loadCategories = async () => {
         try {
@@ -59,6 +60,9 @@ export default function ListProducts() {
             if (statusFilter !== 'all') {
                 params.append('status', statusFilter);
             }
+            if (featuredFilter !== 'all') {
+                params.append('isFeatured', featuredFilter);
+            }
             const response = await axiosInstance.get(`/products/stats?${params.toString()}`);
             if (response.data.success) {
                 setStats(response.data.data);
@@ -83,6 +87,9 @@ export default function ListProducts() {
             }
             if (categoryFilter !== 'all') {
                 params.append('categoryID', categoryFilter);
+            }
+            if (featuredFilter !== 'all') {
+                params.append('isFeatured', featuredFilter);
             }
             const response = await axiosInstance.get(`/products/list?${params.toString()}`);
 
@@ -111,6 +118,11 @@ export default function ListProducts() {
 
     const handleCategoryFilterChange = (e) => {
         setCategoryFilter(e.target.value);
+        setCurrentPage(1); // Reset to first page when filtering
+    };
+
+    const handleFeaturedFilterChange = (e) => {
+        setFeaturedFilter(e.target.value);
         setCurrentPage(1); // Reset to first page when filtering
     };
 
@@ -197,6 +209,9 @@ export default function ListProducts() {
                                             }
                                             if (categoryFilter !== 'all') {
                                                 exportParams.append('categoryID', categoryFilter);
+                                            }
+                                            if (featuredFilter !== 'all') {
+                                                exportParams.append('isFeatured', featuredFilter);
                                             }
                                             const { data } = await axiosInstance.get(`/products/list?${exportParams.toString()}`);
                                             if (!data?.success) break;
@@ -291,6 +306,17 @@ export default function ListProducts() {
                                     <option value="all">All Status</option>
                                     <option value="active">Active</option>
                                     <option value="inactive">Inactive</option>
+                                </select>
+                            </div>
+                            <div className="w-48">
+                                <select
+                                    value={featuredFilter}
+                                    onChange={handleFeaturedFilterChange}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                                >
+                                    <option value="all">All Products</option>
+                                    <option value="true">Featured</option>
+                                    <option value="false">Not Featured</option>
                                 </select>
                             </div>
                         </div>
