@@ -12,7 +12,7 @@ const redirectToLogin = () => {
 };
 
 const axiosInstance = axios.create({
-    baseURL: 'http://localhost:9878/api',
+    baseURL: 'https://api.cursiveletters.in/api',
     headers: { 'Content-Type': 'application/json' },
 });
 

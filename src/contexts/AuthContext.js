@@ -78,7 +78,7 @@ export const AuthProvider = ({ children }) => {
     const register = async (userData) => {
         try {
             setIsLoading(true);
-            const response = await fetch('http://localhost:9878/api/auth/register/admin', {
+            const response = await fetch('https://api.cursiveletters.in/api/auth/register/admin', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

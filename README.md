@@ -14,7 +14,7 @@ pnpm dev
 bun dev
 ```
 
-Open [http://localhost:9878](http://localhost:9878) with your browser to see the result.
+Open [https://api.cursiveletters.in](https://api.cursiveletters.in) with your browser to see the result.
 
 You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
 
