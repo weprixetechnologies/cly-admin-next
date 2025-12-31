@@ -19,7 +19,7 @@ export default function AdminForgotPasswordPage() {
         }
         setLoading(true);
         try {
-            const apiBase = process.env.NEXT_PUBLIC_API_BASE || 'https://api.cursiveletters.in/api';
+            const apiBase = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:9878/api';
             const res = await fetch(`${apiBase}/password-reset/request`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
