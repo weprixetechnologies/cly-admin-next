@@ -102,6 +102,19 @@ const Sidebar = ({ isOpen, onClose }) => {
             ]
         },
         {
+            name: 'Videos',
+            icon: (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14m-2 3H7a3 3 0 01-3-3V8a3 3 0 013-3h6a3 3 0 013 3v6a3 3 0 01-3 3z" />
+                </svg>
+            ),
+            hasSubmenu: true,
+            submenu: [
+                { name: 'Add Video', href: '/videos/add' },
+                { name: 'List Videos', href: '/videos/list' }
+            ]
+        },
+        {
             name: 'Policies',
             icon: (
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

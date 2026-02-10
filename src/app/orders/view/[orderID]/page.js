@@ -33,6 +33,14 @@ export default function OrderDetails({ params }) {
     const [newRemarksPhotos, setNewRemarksPhotos] = useState([])
     const [savingRemarks, setSavingRemarks] = useState(false)
     const [showInvoice, setShowInvoice] = useState(false)
+    const [showShippingLabelModal, setShowShippingLabelModal] = useState(false)
+    const [shippingSender, setShippingSender] = useState({
+        name: '',
+        addressLine1: '',
+        addressLine2: '',
+        contact: ''
+    })
+    const [downloadingShippingLabel, setDownloadingShippingLabel] = useState(false)
     const [editingPaymentId, setEditingPaymentId] = useState(null)
     const [editPaymentAmount, setEditPaymentAmount] = useState('')
     const [editPaymentNotes, setEditPaymentNotes] = useState('')
@@ -136,6 +144,49 @@ export default function OrderDetails({ params }) {
             alert('Failed to update acceptance. Please try again.')
         } finally {
             setSaving(false)
+        }
+    }
+
+    const downloadShippingLabel = async (e) => {
+        e.preventDefault()
+        if (!orderItems.length) return
+
+        try {
+            setDownloadingShippingLabel(true)
+
+            const payload = {
+                senderName: shippingSender.name || undefined,
+                senderAddressLine1: shippingSender.addressLine1 || undefined,
+                senderAddressLine2: shippingSender.addressLine2 || undefined,
+                senderContact: shippingSender.contact || undefined
+            }
+
+            const response = await axios.post(
+                `/invoice/shipping-label/${orderID}`,
+                payload,
+                { responseType: 'blob' }
+            )
+
+            const blob = new Blob([response.data], { type: 'application/pdf' })
+            const url = window.URL.createObjectURL(blob)
+
+            const link = document.createElement('a')
+            link.href = url
+            link.download = `shipping-label-${orderID}.pdf`
+            document.body.appendChild(link)
+            link.click()
+            document.body.removeChild(link)
+
+            setTimeout(() => {
+                window.URL.revokeObjectURL(url)
+            }, 1000)
+
+            setShowShippingLabelModal(false)
+        } catch (error) {
+            console.error('Shipping label download error:', error)
+            alert('Failed to download shipping label. Please try again.')
+        } finally {
+            setDownloadingShippingLabel(false)
         }
     }
 
@@ -702,7 +753,7 @@ export default function OrderDetails({ params }) {
                             <button
                                 onClick={exportToExcel}
                                 disabled={exporting || orderItems.length === 0}
-                                className="px-3 sm:px-4 py-2 text-xs sm:text-sm rounded border bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
+                                className="px-3 sm:px-4 py-2 text-xs sm:text-sm rounded-lg border bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
                             >
                                 {exporting ? (
                                     <>
@@ -711,18 +762,18 @@ export default function OrderDetails({ params }) {
                                     </>
                                 ) : (
                                     <>
-                                        📊 Export Excel
+                                        Export Excel
                                     </>
                                 )}
                             </button>
                             <button
                                 onClick={() => setShowInvoice(true)}
                                 disabled={orderItems.length === 0}
-                                className="px-3 sm:px-4 py-2 text-xs sm:text-sm rounded border bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 flex items-center gap-2"
+                                className="px-3 sm:px-4 py-2 text-xs sm:text-sm rounded-lg border bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 flex items-center gap-2"
                             >
-                                📄 Generate Invoice
+                                Generate Invoice
                             </button>
-                            <button
+                            {/* <button
                                 onClick={generateInvoicePDF}
                                 disabled={generatingPDF || orderItems.length === 0}
                                 className="px-3 sm:px-4 py-2 text-xs sm:text-sm rounded border bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 flex items-center gap-2"
@@ -737,6 +788,13 @@ export default function OrderDetails({ params }) {
                                         📄 Download PDF
                                     </>
                                 )}
+                            </button> */}
+                            <button
+                                onClick={() => setShowShippingLabelModal(true)}
+                                disabled={orderItems.length === 0}
+                                className="px-3 sm:px-4 py-2 text-xs sm:text-sm rounded-lg border bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-50 flex items-center gap-2"
+                            >
+                                Download Label
                             </button>
                         </div>
                     </div>
@@ -861,7 +919,7 @@ export default function OrderDetails({ params }) {
                         </div>
                         <div>
                             <div className="text-gray-700">Payment Mode</div>
-                            <div className="font-medium text-gray-900">{orderItems[0]?.paymentMode || '-'}</div>
+                            <div className="font-medium text-gray-900">Payment Advance</div>
                         </div>
                         <div>
                             <div className="text-gray-700">Payment Status</div>
@@ -1514,6 +1572,112 @@ export default function OrderDetails({ params }) {
                     <p className="mt-2 text-sm text-gray-700">Force mode enabled. Use the buttons above to change status again.</p>
                 )}
             </div>
+
+            {/* Shipping Label Sender Details Modal */}
+            {showShippingLabelModal && (
+                <div
+                    className="fixed inset-0 z-40 flex items-center justify-center bg-black/50"
+                    onClick={() => setShowShippingLabelModal(false)}
+                >
+                    <div
+                        className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="px-4 py-3 border-b flex items-center justify-between">
+                            <h2 className="text-lg font-semibold text-gray-900">
+                                Shipping Label Sender Details
+                            </h2>
+                            <button
+                                type="button"
+                                onClick={() => setShowShippingLabelModal(false)}
+                                className="text-gray-400 hover:text-gray-600 text-xl leading-none"
+                            >
+                                ×
+                            </button>
+                        </div>
+                        <form onSubmit={downloadShippingLabel}>
+                            <div className="px-4 py-4 space-y-4">
+                                <p className="text-xs text-gray-500">
+                                    These details are used only for this PDF and are not saved.
+                                </p>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Sender Name
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={shippingSender.name}
+                                        onChange={(e) => setShippingSender(prev => ({ ...prev, name: e.target.value }))}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                                        placeholder="Enter sender name"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Sender Address Line 1
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={shippingSender.addressLine1}
+                                        onChange={(e) => setShippingSender(prev => ({ ...prev, addressLine1: e.target.value }))}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                                        placeholder="Street, building, etc."
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Sender Address Line 2 (optional)
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={shippingSender.addressLine2}
+                                        onChange={(e) => setShippingSender(prev => ({ ...prev, addressLine2: e.target.value }))}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                                        placeholder="Area, landmark, etc."
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Sender Phone / Email
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={shippingSender.contact}
+                                        onChange={(e) => setShippingSender(prev => ({ ...prev, contact: e.target.value }))}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                                        placeholder="Contact number or email"
+                                    />
+                                </div>
+                            </div>
+                            <div className="px-4 py-3 border-t bg-gray-50 flex justify-end gap-3">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowShippingLabelModal(false)}
+                                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-100"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={downloadingShippingLabel || orderItems.length === 0}
+                                    className="px-4 py-2 text-sm font-medium text-white bg-purple-600 border border-transparent rounded-md hover:bg-purple-700 disabled:opacity-50 flex items-center gap-2"
+                                >
+                                    {downloadingShippingLabel ? (
+                                        <>
+                                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                                            Generating...
+                                        </>
+                                    ) : (
+                                        <>
+                                            📦 Download Shipping Label
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
 
             {/* Invoice Viewer Modal */}
             {showInvoice && (

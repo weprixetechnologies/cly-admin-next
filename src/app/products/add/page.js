@@ -28,6 +28,10 @@ export default function AddProduct() {
     const { isAuthenticated } = useAuth();
     const router = useRouter();
 
+    // Media validation limits
+    const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
+    const MAX_VIDEO_SIZE_BYTES = 100 * 1024 * 1024; // 100MB for MP4
+
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({
@@ -62,12 +66,40 @@ export default function AddProduct() {
     };
 
     const handleGalleryImagesChange = (e) => {
-        const files = Array.from(e.target.files);
-        if (files.length > 5) {
-            setError('Maximum 5 gallery images allowed');
-            return;
+        const files = Array.from(e.target.files || []);
+        if (files.length === 0) return;
+
+        setError('');
+
+        const validFiles = [];
+        for (const file of files) {
+            const isImage = file.type.startsWith('image/');
+            const isVideo = file.type === 'video/mp4';
+
+            if (!isImage && !isVideo) {
+                setError('Only images and MP4 videos are allowed for gallery media.');
+                continue;
+            }
+
+            if (isImage && file.size > MAX_IMAGE_SIZE_BYTES) {
+                setError('One or more images are larger than 5MB.');
+                continue;
+            }
+
+            if (isVideo && file.size > MAX_VIDEO_SIZE_BYTES) {
+                setError('One or more videos are larger than 100MB.');
+                continue;
+            }
+
+            validFiles.push(file);
         }
-        setGalleryImages(files);
+
+        if (validFiles.length > 5) {
+            setError('Maximum 5 gallery media items (images or videos) are allowed.');
+            setGalleryImages(validFiles.slice(0, 5));
+        } else {
+            setGalleryImages(validFiles);
+        }
     };
 
     // Bunny.net configuration
@@ -99,8 +131,13 @@ export default function AddProduct() {
         const newFileName = `${nameWithoutExt}_${randomSuffix}${extension}`;
 
         const fileName = encodeURIComponent(newFileName);
-        const uploadUrl = `https://${storageRegion}/${storageZone}/${fileName}`;
-        const publicUrl = `${pullZoneUrl}/${fileName}`;
+
+        // Store videos under a dedicated /videos/ prefix, keep images at root
+        const isVideo = file.type === 'video/mp4';
+        const objectKey = isVideo ? `videos/${fileName}` : fileName;
+
+        const uploadUrl = `https://${storageRegion}/${storageZone}/${objectKey}`;
+        const publicUrl = `${pullZoneUrl}/${objectKey}`;
 
         const res = await fetch(uploadUrl, {
             method: 'PUT',
@@ -441,7 +478,7 @@ export default function AddProduct() {
                                     type="file"
                                     id="galleryImages"
                                     multiple
-                                    accept="image/*"
+                                    accept="image/*,video/mp4"
                                     onChange={handleGalleryImagesChange}
                                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                                 />
