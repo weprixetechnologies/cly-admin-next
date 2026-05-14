@@ -81,6 +81,10 @@ export default function PendingUsers() {
         <div className="min-h-screen bg-gray-50">
             <header className="bg-white shadow-sm border-b">
                 <div className="px-6 py-4">
+                    <div className="mb-4 bg-orange-100 border-l-4 border-orange-500 text-orange-700 p-4" role="alert">
+                        <p className="font-bold">Notice</p>
+                        <p>This Feature is currently disabled. New users are automatically approved upon registration.</p>
+                    </div>
                     <h1 className="text-2xl font-bold text-gray-800">Pending User Approvals</h1>
                     <p className="text-sm text-gray-600">Review and approve new user registrations</p>
                 </div>

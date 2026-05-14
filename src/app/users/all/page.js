@@ -102,6 +102,20 @@ export default function AllUsers() {
         }
     };
 
+    const handleResetPassword = async (uid, newPassword) => {
+        try {
+            const response = await axios.put(`/admin/users/${uid}/reset-password`, {
+                password: newPassword
+            });
+            if (response.data.success) {
+                alert('Password reset successfully');
+            }
+        } catch (error) {
+            console.error('Error resetting password:', error);
+            alert(error.response?.data?.message || 'Failed to reset password');
+        }
+    };
+
     const getStatusColor = (status) => {
         switch (status) {
             case 'approved':
@@ -434,6 +448,21 @@ export default function AllUsers() {
                                                     className="inline-flex items-center px-2 py-1 border border-transparent text-xs font-medium rounded text-white bg-blue-600 hover:bg-blue-700"
                                                 >
                                                     Edit
+                                                </button>
+                                                <button
+                                                    onClick={() => {
+                                                        const newPassword = prompt(`Enter new password for ${user.name} (min 6 characters):`);
+                                                        if (newPassword) {
+                                                            if (newPassword.length < 6) {
+                                                                alert('Password must be at least 6 characters long');
+                                                                return;
+                                                            }
+                                                            handleResetPassword(user.uid, newPassword);
+                                                        }
+                                                    }}
+                                                    className="inline-flex items-center px-2 py-1 border border-transparent text-xs font-medium rounded text-white bg-orange-600 hover:bg-orange-700"
+                                                >
+                                                    Reset Password
                                                 </button>
                                                 <button
                                                     onClick={() => handleDeleteUser(user.uid)}

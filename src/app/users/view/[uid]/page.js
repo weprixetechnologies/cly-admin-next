@@ -32,6 +32,20 @@ export default function ViewUser() {
         }
     };
 
+    const handleResetPassword = async (newPassword) => {
+        try {
+            const response = await axiosInstance.put(`/admin/users/${params.uid}/reset-password`, {
+                password: newPassword
+            });
+            if (response.data.success) {
+                alert('Password reset successfully');
+            }
+        } catch (error) {
+            console.error('Error resetting password:', error);
+            alert(error.response?.data?.message || 'Failed to reset password');
+        }
+    };
+
     const getStatusBadge = (status) => {
         const statusClasses = {
             active: 'bg-green-100 text-green-800',
@@ -122,12 +136,29 @@ export default function ViewUser() {
                             </button>
                             <h1 className="text-2xl font-bold text-gray-800">User Details</h1>
                         </div>
-                        <button
-                            onClick={() => router.push(`/users/edit/${user.uid}`)}
-                            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium"
-                        >
-                            Edit User
-                        </button>
+                        <div className="flex space-x-2">
+                            <button
+                                onClick={() => {
+                                    const newPassword = prompt('Enter new password (min 6 characters):');
+                                    if (newPassword) {
+                                        if (newPassword.length < 6) {
+                                            alert('Password must be at least 6 characters long');
+                                            return;
+                                        }
+                                        handleResetPassword(newPassword);
+                                    }
+                                }}
+                                className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+                            >
+                                Reset Password
+                            </button>
+                            <button
+                                onClick={() => router.push(`/users/edit/${user.uid}`)}
+                                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+                            >
+                                Edit User
+                            </button>
+                        </div>
                     </div>
                 </div>
             </header>
