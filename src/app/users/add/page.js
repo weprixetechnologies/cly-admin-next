@@ -75,7 +75,7 @@ export default function AddUser() {
             // Remove confirmPassword from the data
             delete userData.confirmPassword;
 
-            const response = await axiosInstance.post('/auth/register/user', userData);
+            const response = await axiosInstance.post('/admin/users', userData);
 
             setSuccess('User created successfully!');
             setTimeout(() => {

@@ -45,6 +45,7 @@ export default function OrderDetails({ params }) {
     const [editPaymentAmount, setEditPaymentAmount] = useState('')
     const [editPaymentNotes, setEditPaymentNotes] = useState('')
     const [savingPaymentEdit, setSavingPaymentEdit] = useState(false)
+    const [affiliateCommission, setAffiliateCommission] = useState(null)
 
     const isLocked = orderStatus === 'accepted'
 
@@ -78,6 +79,16 @@ export default function OrderDetails({ params }) {
                 const paymentResponse = await axios.get(`/order/admin/${orderID}/payment`)
                 const payments = paymentResponse.data?.data || []
                 setOrderPayment(payments)
+
+                // Fetch affiliate commission data
+                try {
+                    const affResponse = await axios.get(`/affiliate/admin/order-commission/${orderID}`)
+                    if (affResponse.data?.success && affResponse.data?.data) {
+                        setAffiliateCommission(affResponse.data.data)
+                    }
+                } catch (affErr) {
+                    // Silently ignore — order may have no affiliate
+                }
             } catch (e) {
                 console.error(e)
             } finally {
@@ -952,6 +963,47 @@ export default function OrderDetails({ params }) {
                         </div>
                     </div>
                 </div>
+
+                {/* Affiliate Commission Section */}
+                {affiliateCommission && (
+                    <div className="bg-white rounded-lg shadow">
+                        <div className="p-6 border-b flex items-center justify-between">
+                            <h2 className="text-lg font-semibold text-gray-900">🤝 Affiliate Commission</h2>
+                            <span className={`inline-flex px-2.5 py-1 text-xs font-semibold rounded-full ${
+                                affiliateCommission.status === 'APPROVED' ? 'bg-green-100 text-green-800' :
+                                affiliateCommission.status === 'PAID' ? 'bg-blue-100 text-blue-800' :
+                                affiliateCommission.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
+                                affiliateCommission.status === 'VOIDED' ? 'bg-gray-100 text-gray-800' :
+                                'bg-red-100 text-red-800'
+                            }`}>
+                                {affiliateCommission.status}
+                            </span>
+                        </div>
+                        <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
+                            <div>
+                                <div className="text-gray-500 text-xs uppercase tracking-wider mb-1">Affiliate</div>
+                                <div className="font-semibold text-gray-900">{affiliateCommission.affiliate_name}</div>
+                                <div className="text-gray-500 text-xs">{affiliateCommission.affiliate_email}</div>
+                            </div>
+                            <div>
+                                <div className="text-gray-500 text-xs uppercase tracking-wider mb-1">Referral Code</div>
+                                <div className="font-mono font-semibold text-indigo-600">{affiliateCommission.referral_code}</div>
+                            </div>
+                            <div>
+                                <div className="text-gray-500 text-xs uppercase tracking-wider mb-1">Commission Rate</div>
+                                <div className="font-semibold text-gray-900">{affiliateCommission.commission_percentage_applied}%</div>
+                                {affiliateCommission.commission_cap_applied && parseFloat(affiliateCommission.commission_cap_applied) > 0 && (
+                                    <div className="text-gray-500 text-xs">Cap: ₹{parseFloat(affiliateCommission.commission_cap_applied).toFixed(2)}</div>
+                                )}
+                            </div>
+                            <div>
+                                <div className="text-gray-500 text-xs uppercase tracking-wider mb-1">Commission Amount</div>
+                                <div className="font-bold text-lg text-green-700">₹{parseFloat(affiliateCommission.commission_amount).toFixed(2)}</div>
+                                <div className="text-gray-500 text-xs">on order ₹{parseFloat(affiliateCommission.order_amount).toFixed(2)}</div>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 <div className="bg-white rounded-lg shadow">
                     <div className="p-6 border-b">

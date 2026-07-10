@@ -13,6 +13,12 @@ export default function AllUsers() {
     const [searchTerm, setSearchTerm] = useState('');
     const [stats, setStats] = useState(null);
     const [statsLoading, setStatsLoading] = useState(false);
+    
+    // Bulk Enroll Modal States
+    const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
+    const [unenrolledUsers, setUnenrolledUsers] = useState([]);
+    const [isFetchingUnenrolled, setIsFetchingUnenrolled] = useState(false);
+    
     const router = useRouter();
 
     useEffect(() => {
@@ -113,6 +119,63 @@ export default function AllUsers() {
         } catch (error) {
             console.error('Error resetting password:', error);
             alert(error.response?.data?.message || 'Failed to reset password');
+        }
+    };
+
+    const handleMakeAffiliate = async (uid, name) => {
+        if (!confirm(`Make ${name} an affiliate?`)) return;
+        try {
+            const { data } = await axios.post(`/affiliate/admin/enroll/${uid}`);
+            if (data.success) {
+                alert(`Successfully enrolled ${name} as an affiliate!`);
+            }
+        } catch (error) {
+            console.error('Error enrolling affiliate:', error);
+            alert(error.response?.data?.message || 'Failed to enroll affiliate');
+        }
+    };
+
+    const handleOpenBulkModal = async () => {
+        setIsBulkModalOpen(true);
+        setIsFetchingUnenrolled(true);
+        try {
+            const { data } = await axios.get('/affiliate/admin/enroll-all');
+            if (data.success) {
+                setUnenrolledUsers(data.data || []);
+            }
+        } catch (error) {
+            console.error('Error fetching unenrolled users:', error);
+            alert('Failed to fetch unenrolled users.');
+            setIsBulkModalOpen(false);
+        } finally {
+            setIsFetchingUnenrolled(false);
+        }
+    };
+
+    const handleConfirmBulkEnroll = async () => {
+        try {
+            const { data } = await axios.post('/affiliate/admin/enroll-all');
+            if (data.success) {
+                alert(data.message || `Successfully enrolled ${data.count} users!`);
+                setIsBulkModalOpen(false);
+                // Optionally refresh or reset
+            }
+        } catch (error) {
+            console.error('Error in bulk enroll:', error);
+            alert(error.response?.data?.message || 'Failed to enroll users');
+        }
+    };
+
+    const handleBulkMakeAffiliate = async () => {
+        if (!confirm('This will enroll all non-affiliate users into the affiliate program. Proceed?')) return;
+        try {
+            const { data } = await axios.post('/affiliate/admin/enroll-all');
+            if (data.success) {
+                alert(data.message || `Successfully enrolled ${data.count} users!`);
+            }
+        } catch (error) {
+            console.error('Error in bulk enroll:', error);
+            alert(error.response?.data?.message || 'Failed to enroll users');
         }
     };
 
@@ -322,16 +385,27 @@ export default function AllUsers() {
                             <h2 className="text-lg font-semibold text-gray-900">
                                 Users ({users.length})
                             </h2>
-                            <button
-                                onClick={exportToExcel}
-                                disabled={users.length === 0}
-                                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:bg-gray-400 disabled:cursor-not-allowed"
-                            >
-                                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                </svg>
-                                Export User List in Excel
-                            </button>
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={handleOpenBulkModal}
+                                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+                                >
+                                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+                                    </svg>
+                                    Bulk Make Affiliate
+                                </button>
+                                <button
+                                    onClick={exportToExcel}
+                                    disabled={users.length === 0}
+                                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                                >
+                                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                    </svg>
+                                    Export Excel
+                                </button>
+                            </div>
                         </div>
 
                         {/* Search and Filter Controls */}
@@ -465,6 +539,12 @@ export default function AllUsers() {
                                                     Reset Password
                                                 </button>
                                                 <button
+                                                    onClick={() => handleMakeAffiliate(user.uid, user.name)}
+                                                    className="inline-flex items-center px-2 py-1 border border-transparent text-xs font-medium rounded text-white bg-purple-600 hover:bg-purple-700"
+                                                >
+                                                    Make Affiliate
+                                                </button>
+                                                <button
                                                     onClick={() => handleDeleteUser(user.uid)}
                                                     className="inline-flex items-center px-2 py-1 border border-transparent text-xs font-medium rounded text-white bg-red-600 hover:bg-red-700"
                                                 >
@@ -479,6 +559,88 @@ export default function AllUsers() {
                     )}
                 </div>
             </main>
+
+            {/* Bulk Enroll Modal */}
+            {isBulkModalOpen && (
+                <div className="fixed inset-0 z-[9999] overflow-y-auto">
+                    <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                        <div className="fixed inset-0 transition-opacity" aria-hidden="true">
+                            <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
+                        </div>
+
+                        <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+                        <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full relative">
+                            {/* Close Button */}
+                            <button
+                                onClick={() => setIsBulkModalOpen(false)}
+                                className="absolute top-4 right-4 text-gray-400 hover:text-gray-500 focus:outline-none"
+                            >
+                                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                            <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                                <div className="sm:flex sm:items-start">
+                                    <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-purple-100 sm:mx-0 sm:h-10 sm:w-10">
+                                        <svg className="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+                                        </svg>
+                                    </div>
+                                    <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                                        <h3 className="text-lg leading-6 font-medium text-gray-900">
+                                            Bulk Enroll Affiliates
+                                        </h3>
+                                        <div className="mt-4">
+                                            {isFetchingUnenrolled ? (
+                                                <div className="flex justify-center items-center py-8">
+                                                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+                                                    <span className="ml-3 text-gray-600">Fetching users...</span>
+                                                </div>
+                                            ) : (
+                                                <div>
+                                                    <p className="text-sm text-gray-500 mb-4">
+                                                        Found <strong>{unenrolledUsers.length}</strong> user(s) who are not currently enrolled in the affiliate program.
+                                                    </p>
+                                                    {unenrolledUsers.length > 0 && (
+                                                        <div className="bg-gray-50 rounded-md p-3 max-h-48 overflow-y-auto border border-gray-200">
+                                                            <ul className="text-sm text-gray-700 divide-y divide-gray-200">
+                                                                {unenrolledUsers.map(u => (
+                                                                    <li key={u.uid} className="py-2 flex justify-between">
+                                                                        <span className="font-medium">{u.name}</span>
+                                                                        <span className="text-gray-500">{u.emailID}</span>
+                                                                    </li>
+                                                                ))}
+                                                            </ul>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                                <button
+                                    type="button"
+                                    disabled={isFetchingUnenrolled || unenrolledUsers.length === 0}
+                                    className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-purple-600 text-base font-medium text-white hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 sm:ml-3 sm:w-auto sm:text-sm disabled:bg-purple-300"
+                                    onClick={handleConfirmBulkEnroll}
+                                >
+                                    Enroll All
+                                </button>
+                                <button
+                                    type="button"
+                                    className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+                                    onClick={() => setIsBulkModalOpen(false)}
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
