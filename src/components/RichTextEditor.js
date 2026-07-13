@@ -1,13 +1,13 @@
 'use client'
 
-import { useEditor, EditorContent } from '@tiptap/react';
+import { useEditor, EditorContent, ReactNodeViewRenderer, NodeViewWrapper } from '@tiptap/react';
 import 'highlight.js/styles/github-dark.css';
 import StarterKit from '@tiptap/starter-kit';
 import Link from '@tiptap/extension-link';
 import TextAlign from '@tiptap/extension-text-align';
 import Underline from '@tiptap/extension-underline';
 import Placeholder from '@tiptap/extension-placeholder';
-import Image from '@tiptap/extension-image';
+import { Node } from '@tiptap/core';
 import { Table, TableRow, TableHeader, TableCell } from '@tiptap/extension-table';
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';
 import HorizontalRule from '@tiptap/extension-horizontal-rule';
@@ -16,7 +16,7 @@ import Highlight from '@tiptap/extension-highlight';
 import Subscript from '@tiptap/extension-subscript';
 import Superscript from '@tiptap/extension-superscript';
 import { Mark } from '@tiptap/core';
-import { useMemo, useEffect, useState } from 'react';
+import { useMemo, useEffect, useState, useRef, useCallback } from 'react';
 import { createLowlight } from 'lowlight';
 import javascript from 'highlight.js/lib/languages/javascript';
 import typescript from 'highlight.js/lib/languages/typescript';
@@ -76,6 +76,126 @@ const LetterSpacing = Mark.create({
     },
 });
 
+// ─── Resizable Image Node View (React component rendered per image) ───────────
+const ResizableImageView = ({ node, updateAttributes, selected }) => {
+    const imgRef = useRef(null);
+    const startX = useRef(0);
+    const startW = useRef(0);
+
+    const onMouseDown = useCallback((e, isLeft) => {
+        e.preventDefault();
+        e.stopPropagation();
+        startX.current = e.clientX;
+        startW.current = imgRef.current ? imgRef.current.offsetWidth : (node.attrs.width || 400);
+
+        const onMove = (moveEvt) => {
+            const dx = moveEvt.clientX - startX.current;
+            const delta = isLeft ? -dx : dx;
+            const newWidth = Math.max(80, Math.round(startW.current + delta));
+            updateAttributes({ width: newWidth });
+        };
+
+        const onUp = () => {
+            window.removeEventListener('mousemove', onMove);
+            window.removeEventListener('mouseup', onUp);
+        };
+
+        window.addEventListener('mousemove', onMove);
+        window.addEventListener('mouseup', onUp);
+    }, [node.attrs.width, updateAttributes]);
+
+    const width = node.attrs.width ? `${node.attrs.width}px` : 'auto';
+    const handle = {
+        position: 'absolute', width: 10, height: 10,
+        background: '#d97706', border: '2px solid #fff',
+        borderRadius: 2, zIndex: 10, cursor: 'ew-resize',
+    };
+
+    return (
+        <NodeViewWrapper
+            as="span"
+            style={{ display: 'inline-block', position: 'relative', maxWidth: '100%', lineHeight: 0, verticalAlign: 'middle' }}
+        >
+            <img
+                ref={imgRef}
+                src={node.attrs.src}
+                alt={node.attrs.alt || ''}
+                title={node.attrs.title || ''}
+                style={{
+                    width, height: 'auto', display: 'block', borderRadius: 4,
+                    outline: selected ? '2px solid #d97706' : 'none',
+                    outlineOffset: 2, userSelect: 'none', pointerEvents: selected ? 'none' : 'auto'
+                }}
+                draggable={false}
+            />
+            {selected && (
+                <>
+                    {/* Left handle */}
+                    <span onMouseDown={(e) => onMouseDown(e, true)}
+                        style={{ ...handle, top: '50%', left: -6, transform: 'translateY(-50%)',
+                            cursor: 'w-resize', bottom: 'auto' }} />
+                    {/* Right handle */}
+                    <span onMouseDown={(e) => onMouseDown(e, false)}
+                        style={{ ...handle, top: '50%', right: -6, transform: 'translateY(-50%)',
+                            cursor: 'e-resize', bottom: 'auto' }} />
+                    {/* Bottom-right corner */}
+                    <span onMouseDown={(e) => onMouseDown(e, false)}
+                        style={{ ...handle, bottom: -5, right: -5, cursor: 'se-resize', top: 'auto' }} />
+                    {/* Bottom-left corner */}
+                    <span onMouseDown={(e) => onMouseDown(e, true)}
+                        style={{ ...handle, bottom: -5, left: -5, cursor: 'sw-resize', top: 'auto' }} />
+                </>
+            )}
+        </NodeViewWrapper>
+    );
+};
+
+// ─── ResizableImage TipTap Extension ────────────────────────────────────────
+const ResizableImage = Node.create({
+    name: 'image',
+    group: 'inline',
+    inline: true,
+    draggable: true,
+    selectable: true,
+
+    addAttributes() {
+        return {
+            src:   { default: null },
+            alt:   { default: null },
+            title: { default: null },
+            width: {
+                default: null,
+                parseHTML: (el) => {
+                    const w = el.style.width || el.getAttribute('width');
+                    return w ? parseInt(w, 10) : null;
+                },
+                renderHTML: (attrs) => {
+                    if (!attrs.width) return {};
+                    return { style: `width:${attrs.width}px`, width: attrs.width };
+                },
+            },
+        };
+    },
+
+    parseHTML() {
+        return [{ tag: 'img[src]' }];
+    },
+
+    renderHTML({ HTMLAttributes }) {
+        return ['img', { ...HTMLAttributes, class: 'max-w-full h-auto rounded' }];
+    },
+
+    addNodeView() {
+        return ReactNodeViewRenderer(ResizableImageView);
+    },
+
+    addCommands() {
+        return {
+            setImage: (attrs) => ({ commands }) => commands.insertContent({ type: this.name, attrs }),
+        };
+    },
+});
+
 const RichTextEditor = ({ value, onChange, placeholder = "Enter content..." }) => {
     const [showColorPicker, setShowColorPicker] = useState(false);
     const [showHighlightPicker, setShowHighlightPicker] = useState(false);
@@ -83,6 +203,14 @@ const RichTextEditor = ({ value, onChange, placeholder = "Enter content..." }) =
     const [showLineSpacing, setShowLineSpacing] = useState(false);
     const [showLetterSpacing, setShowLetterSpacing] = useState(false);
     const [linkUrl, setLinkUrl] = useState('');
+
+    // Image Upload Modal States
+    const [showImageModal, setShowImageModal] = useState(false);
+    const [imageAlt, setImageAlt] = useState('');
+    const [imageUrl, setImageUrl] = useState('');
+    const [imageFile, setImageFile] = useState(null);
+    const [imageUploading, setImageUploading] = useState(false);
+    const [imageUploadError, setImageUploadError] = useState('');
 
     const editor = useEditor({
         immediatelyRender: false,
@@ -115,13 +243,7 @@ const RichTextEditor = ({ value, onChange, placeholder = "Enter content..." }) =
                 types: ['heading', 'paragraph'],
                 defaultAlignment: 'left',
             }),
-            Image.configure({
-                inline: true,
-                allowBase64: true,
-                HTMLAttributes: {
-                    class: 'max-w-full h-auto rounded',
-                },
-            }),
+            ResizableImage,
             Table.configure({
                 resizable: true,
                 HTMLAttributes: {
@@ -190,11 +312,77 @@ const RichTextEditor = ({ value, onChange, placeholder = "Enter content..." }) =
     }, [value]);
 
     const handleAddImage = () => {
-        const url = window.prompt('Enter image URL:');
-        if (url) {
-            editor.chain().focus().setImage({ src: url }).run();
+        setImageAlt('');
+        setImageUrl('');
+        setImageFile(null);
+        setImageUploadError('');
+        setShowImageModal(true);
+    };
+
+    const handleImageSubmit = async () => {
+        if (!imageAlt.trim()) {
+            setImageUploadError('Alt text is required for search engines.');
+            return;
+        }
+
+        setImageUploading(true);
+        setImageUploadError('');
+
+        try {
+            let finalUrl = imageUrl;
+
+            if (imageFile) {
+                // Upload directly to Bunny CDN (same config as products/add)
+                const BUNNY_STORAGE_ZONE = 'cly-bunny';
+                const BUNNY_STORAGE_REGION = 'storage.bunnycdn.com';
+                const BUNNY_PULL_ZONE = 'https://cly-pull-bunny.b-cdn.net';
+                const BUNNY_API_KEY = '22cfd8b3-8021-40a3-b100a9d48bc0-7dc3-4654';
+
+                const originalName = imageFile.name;
+                const lastDot = originalName.lastIndexOf('.');
+                const nameWithoutExt = lastDot > 0 ? originalName.substring(0, lastDot) : originalName;
+                const ext = lastDot > 0 ? originalName.substring(lastDot) : '';
+                const chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+                let suffix = '';
+                for (let i = 0; i < 6; i++) suffix += chars.charAt(Math.floor(Math.random() * chars.length));
+                const newFileName = `${nameWithoutExt}_${suffix}${ext}`;
+
+                // Only encode the filename — do NOT encode the '/' in the path
+                const objectKey = `blog/${encodeURIComponent(newFileName)}`;
+                const uploadUrl = `https://${BUNNY_STORAGE_REGION}/${BUNNY_STORAGE_ZONE}/${objectKey}`;
+                const publicUrl = `${BUNNY_PULL_ZONE}/${objectKey}`;
+
+                const res = await fetch(uploadUrl, {
+                    method: 'PUT',
+                    headers: { AccessKey: BUNNY_API_KEY, 'Content-Type': imageFile.type },
+                    body: imageFile,
+                });
+
+                if (!res.ok) {
+                    const errText = await res.text();
+                    throw new Error(`Upload failed: ${res.status} - ${errText}`);
+                }
+
+                finalUrl = publicUrl;
+            }
+
+            if (!finalUrl) {
+                throw new Error('Please select a file to upload or enter an external image URL.');
+            }
+
+            editor.chain().focus().setImage({ src: finalUrl, alt: imageAlt }).run();
+            setShowImageModal(false);
+            setImageAlt('');
+            setImageUrl('');
+            setImageFile(null);
+        } catch (error) {
+            console.error('Error inserting image:', error);
+            setImageUploadError(error.message || 'Failed to upload image.');
+        } finally {
+            setImageUploading(false);
         }
     };
+
 
     const handleAddLink = () => {
         if (editor.isActive('link')) {
@@ -815,6 +1003,103 @@ const RichTextEditor = ({ value, onChange, placeholder = "Enter content..." }) =
                     <span>Paragraphs: {value ? (value.match(/<p[^>]*>/g) || []).length : 0}</span>
                 </div>
             </div>
+
+            {/* Image Upload Modal */}
+            {showImageModal && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl overflow-hidden border border-gray-100 animate-in fade-in duration-200">
+                        <div className="bg-gray-50 px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+                            <h3 className="font-serif font-bold text-gray-900 text-lg">Insert Image</h3>
+                            <button
+                                type="button"
+                                onClick={() => setShowImageModal(false)}
+                                className="text-gray-400 hover:text-gray-600 transition-colors"
+                            >
+                                ✕
+                            </button>
+                        </div>
+                        <div className="p-6 space-y-4">
+                            {imageUploadError && (
+                                <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-xs text-red-600 font-medium">
+                                    {imageUploadError}
+                                </div>
+                            )}
+
+                            <div>
+                                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">
+                                    Option A: Upload Local File
+                                </label>
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={(e) => {
+                                        setImageFile(e.target.files[0]);
+                                        setImageUrl(''); // Clear url
+                                    }}
+                                    className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100 transition-all"
+                                    disabled={imageUploading}
+                                />
+                            </div>
+
+                            <div className="relative py-2 flex items-center justify-center">
+                                <span className="absolute bg-white px-3 text-xs text-gray-400 font-bold uppercase">Or</span>
+                                <div className="w-full border-t border-gray-100"></div>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">
+                                    Option B: Image URL
+                                </label>
+                                <input
+                                    type="url"
+                                    value={imageUrl}
+                                    onChange={(e) => {
+                                        setImageUrl(e.target.value);
+                                        setImageFile(null); // Clear file
+                                    }}
+                                    placeholder="https://example.com/image.png"
+                                    className="w-full px-3.5 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600 transition-all text-gray-800"
+                                    disabled={imageUploading}
+                                />
+                            </div>
+
+                            <div className="border-t border-gray-100 pt-4">
+                                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">
+                                    Alt Text (Required for SEO)
+                                </label>
+                                <input
+                                    type="text"
+                                    value={imageAlt}
+                                    onChange={(e) => setImageAlt(e.target.value)}
+                                    placeholder="Describe this image for search engines..."
+                                    className="w-full px-3.5 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600 transition-all text-gray-800"
+                                    required
+                                    disabled={imageUploading}
+                                />
+                            </div>
+
+                            <div className="flex gap-3 justify-end pt-4">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowImageModal(false)}
+                                    className="px-4 py-2 border border-gray-200 text-gray-600 hover:bg-gray-50 text-sm font-semibold rounded-lg transition-colors"
+                                    disabled={imageUploading}
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={handleImageSubmit}
+                                    className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-sm font-semibold rounded-lg shadow-md transition-colors flex items-center gap-1.5"
+                                    disabled={imageUploading}
+                                >
+                                    {imageUploading ? 'Inserting...' : 'Insert Image'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
