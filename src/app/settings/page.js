@@ -86,9 +86,12 @@ export default function SettingsPage() {
         );
     }
 
-    // Example prices for preview
+    // Example prices for preview — same formula as productCard
+    // mrp × (1 - pct/100) = salePrice  →  mrp = salePrice / (1 - pct/100)
     const examplePrice = 100;
-    const exampleMRP = (examplePrice * (1 + percentage / 100)).toFixed(0);
+    const exampleMRP = percentage > 0 && percentage < 100
+        ? (examplePrice / (1 - percentage / 100)).toFixed(0)
+        : examplePrice;
 
     return (
         <>
