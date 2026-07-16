@@ -34,6 +34,15 @@ export default function OrderDetails({ params }) {
     const [savingRemarks, setSavingRemarks] = useState(false)
     const [showInvoice, setShowInvoice] = useState(false)
     const [showShippingLabelModal, setShowShippingLabelModal] = useState(false)
+    
+    // Dispatch states
+    const [isDispatched, setIsDispatched] = useState(false)
+    const [awbNumber, setAwbNumber] = useState('')
+    const [companyName, setCompanyName] = useState('')
+    const [trackingLink, setTrackingLink] = useState('')
+    const [showDispatchModal, setShowDispatchModal] = useState(false)
+    const [dispatching, setDispatching] = useState(false)
+
     const [shippingSender, setShippingSender] = useState({
         name: '',
         addressLine1: '',
@@ -58,7 +67,12 @@ export default function OrderDetails({ params }) {
                 setOrderItems(rows)
                 if (rows.length > 0) {
                     setOrderStatus(rows[0].orderStatus || 'pending')
+                    setIsDispatched(!!rows[0].isDispatched)
+                    setAwbNumber(rows[0].awbNumber || '')
+                    setCompanyName(rows[0].companyName || '')
+                    setTrackingLink(rows[0].trackingLink || '')
                     setRemarks(rows[0].remarks || '')
+
                     // Parse remarks_photos if it exists
                     let photos = [];
                     if (rows[0].remarks_photos) {
@@ -114,6 +128,53 @@ export default function OrderDetails({ params }) {
             setSaving(false)
         }
     }
+
+    const handleDispatchOrder = async (e) => {
+        e.preventDefault()
+        if (!trackingLink) {
+            alert('Tracking Link is required')
+            return
+        }
+        try {
+            setDispatching(true)
+            const response = await axios.post(`/order/admin/${orderID}/dispatch`, {
+                trackingLink,
+                awbNumber: awbNumber || undefined,
+                companyName: companyName || undefined
+            })
+            if (response.data?.success) {
+                setIsDispatched(true)
+                setShowDispatchModal(false)
+                alert('Order marked as Dispatched successfully!')
+            } else {
+                alert(response.data?.message || 'Failed to dispatch order')
+            }
+        } catch (err) {
+            console.error(err)
+            alert(err.response?.data?.message || 'Failed to dispatch order')
+        } finally {
+            setDispatching(false)
+        }
+    }
+
+    const handleResendDispatchSMS = async () => {
+        try {
+            setDispatching(true)
+            const response = await axios.post(`/order/admin/${orderID}/send-dispatch-sms`)
+            if (response.data?.success) {
+                alert(response.data?.message || 'Dispatch SMS sent successfully!')
+            } else {
+                alert(response.data?.message || 'Failed to send dispatch SMS')
+            }
+        } catch (err) {
+            console.error(err)
+            alert(err.response?.data?.message || 'Failed to send dispatch SMS')
+        } finally {
+            setDispatching(false)
+        }
+    }
+
+
 
     const updatePartialAcceptance = async (productID) => {
         try {
@@ -757,10 +818,38 @@ export default function OrderDetails({ params }) {
                                     <button disabled={saving} onClick={() => updateStatus('rejected')} className="px-2 sm:px-3 py-2 text-xs sm:text-sm rounded border bg-red-600 text-white hover:bg-red-700 disabled:opacity-50">Reject</button>
                                 </>
                             ) : (
-                                <span className={`px-2 sm:px-3 py-2 text-xs sm:text-sm font-semibold rounded-full ${orderStatus === 'accepted' ? 'bg-green-100 text-green-800' : orderStatus === 'rejected' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'}`}>
-                                    Status Already Updated
-                                </span>
+                                <div className="flex items-center gap-2">
+                                    <span className={`px-2 sm:px-3 py-2 text-xs sm:text-sm font-semibold rounded-full ${orderStatus === 'accepted' ? 'bg-green-100 text-green-800' : orderStatus === 'rejected' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'}`}>
+                                        {orderStatus === 'accepted' ? 'Accepted' : orderStatus === 'rejected' ? 'Rejected' : orderStatus}
+                                    </span>
+                                    {orderStatus === 'accepted' && (
+                                        isDispatched ? (
+                                            <div className="flex items-center gap-2">
+                                                <span className="px-2 sm:px-3 py-2 text-xs sm:text-sm font-semibold rounded-full bg-blue-100 text-blue-800 flex items-center gap-1">
+                                                    📦 Dispatched
+                                                </span>
+                                                <button
+                                                    onClick={handleResendDispatchSMS}
+                                                    disabled={dispatching}
+                                                    className="px-2 sm:px-3 py-1.5 text-xs font-semibold rounded border border-blue-200 bg-white text-blue-600 hover:bg-blue-50 flex items-center gap-1 transition"
+                                                    title="Resend Dispatch SMS notification to customer"
+                                                >
+                                                    {dispatching ? 'Sending…' : 'Resend SMS 🔄'}
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <button
+                                                onClick={() => setShowDispatchModal(true)}
+                                                className="px-2.5 sm:px-3.5 py-2 text-xs sm:text-sm font-semibold rounded-lg bg-blue-600 text-white hover:bg-blue-700 flex items-center gap-1"
+                                            >
+                                                📦 Dispatch Order
+                                            </button>
+                                        )
+                                    )}
+                                </div>
+
                             )}
+
                             <button
                                 onClick={exportToExcel}
                                 disabled={exporting || orderItems.length === 0}
@@ -1737,6 +1826,89 @@ export default function OrderDetails({ params }) {
                     orderID={orderID}
                     onClose={() => setShowInvoice(false)}
                 />
+            )}
+
+            {/* Dispatch Order Modal */}
+            {showDispatchModal && (
+                <div
+                    className="fixed inset-0 z-40 flex items-center justify-center bg-black/50"
+                    onClick={() => setShowDispatchModal(false)}
+                >
+                    <div
+                        className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="px-4 py-3 border-b flex items-center justify-between">
+                            <h2 className="text-lg font-semibold text-gray-900">
+                                📦 Enter Dispatch Details
+                            </h2>
+                            <button
+                                type="button"
+                                onClick={() => setShowDispatchModal(false)}
+                                className="text-gray-400 hover:text-gray-600 text-xl leading-none"
+                            >
+                                ×
+                            </button>
+                        </div>
+                        <form onSubmit={handleDispatchOrder}>
+                            <div className="px-4 py-4 space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Tracking Link <span className="text-red-500">*</span>
+                                    </label>
+                                    <input
+                                        type="url"
+                                        required
+                                        value={trackingLink}
+                                        onChange={(e) => setTrackingLink(e.target.value)}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                                        placeholder="e.g. https://delhivery.com/track/..."
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        AWB Number / Tracking Code
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={awbNumber}
+                                        onChange={(e) => setAwbNumber(e.target.value)}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                                        placeholder="e.g. 1234567890"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Courier Company Name
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={companyName}
+                                        onChange={(e) => setCompanyName(e.target.value)}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                                        placeholder="e.g. Delhivery, Blue Dart"
+                                    />
+                                </div>
+                            </div>
+                            <div className="px-4 py-3 border-t bg-gray-50 flex justify-end gap-3">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowDispatchModal(false)}
+                                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-100"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={dispatching}
+                                    className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
+                                >
+                                    {dispatching ? 'Saving…' : 'Mark Dispatched'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
             )}
         </>
     )
