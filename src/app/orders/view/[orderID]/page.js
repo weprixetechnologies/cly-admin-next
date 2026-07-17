@@ -42,6 +42,7 @@ export default function OrderDetails({ params }) {
     const [trackingLink, setTrackingLink] = useState('')
     const [showDispatchModal, setShowDispatchModal] = useState(false)
     const [dispatching, setDispatching] = useState(false)
+    const [smsStatus, setSmsStatus] = useState('')
 
     const [shippingSender, setShippingSender] = useState({
         name: '',
@@ -58,57 +59,59 @@ export default function OrderDetails({ params }) {
 
     const isLocked = orderStatus === 'accepted'
 
-    useEffect(() => {
-        const fetchOrder = async () => {
-            try {
-                const { data } = await axios.get(`/order/admin/${orderID}`)
-                const rows = data?.data || []
-                console.log('[OrderDetails] rows from orders table:', rows)
-                setOrderItems(rows)
-                if (rows.length > 0) {
-                    setOrderStatus(rows[0].orderStatus || 'pending')
-                    setIsDispatched(!!rows[0].isDispatched)
-                    setAwbNumber(rows[0].awbNumber || '')
-                    setCompanyName(rows[0].companyName || '')
-                    setTrackingLink(rows[0].trackingLink || '')
-                    setRemarks(rows[0].remarks || '')
+    const fetchOrder = async () => {
+        try {
+            const { data } = await axios.get(`/order/admin/${orderID}`)
+            const rows = data?.data || []
+            console.log('[OrderDetails] rows from orders table:', rows)
+            setOrderItems(rows)
+            if (rows.length > 0) {
+                setOrderStatus(rows[0].orderStatus || 'pending')
+                setIsDispatched(!!rows[0].isDispatched)
+                setAwbNumber(rows[0].awbNumber || '')
+                setCompanyName(rows[0].companyName || '')
+                setTrackingLink(rows[0].trackingLink || '')
+                setRemarks(rows[0].remarks || '')
+                setSmsStatus(rows[0].smsStatus || '')
 
-                    // Parse remarks_photos if it exists
-                    let photos = [];
-                    if (rows[0].remarks_photos) {
-                        try {
-                            photos = typeof rows[0].remarks_photos === 'string'
-                                ? JSON.parse(rows[0].remarks_photos)
-                                : rows[0].remarks_photos;
-                            if (!Array.isArray(photos)) photos = [];
-                        } catch (e) {
-                            photos = [];
-                        }
+                // Parse remarks_photos if it exists
+                let photos = [];
+                if (rows[0].remarks_photos) {
+                    try {
+                        photos = typeof rows[0].remarks_photos === 'string'
+                            ? JSON.parse(rows[0].remarks_photos)
+                            : rows[0].remarks_photos;
+                        if (!Array.isArray(photos)) photos = [];
+                    } catch (e) {
+                        photos = [];
                     }
-                    setRemarksPhotos(photos)
-                    setNewRemarksPhotos([])
                 }
-
-                // Fetch order payment data
-                const paymentResponse = await axios.get(`/order/admin/${orderID}/payment`)
-                const payments = paymentResponse.data?.data || []
-                setOrderPayment(payments)
-
-                // Fetch affiliate commission data
-                try {
-                    const affResponse = await axios.get(`/affiliate/admin/order-commission/${orderID}`)
-                    if (affResponse.data?.success && affResponse.data?.data) {
-                        setAffiliateCommission(affResponse.data.data)
-                    }
-                } catch (affErr) {
-                    // Silently ignore — order may have no affiliate
-                }
-            } catch (e) {
-                console.error(e)
-            } finally {
-                setLoading(false)
+                setRemarksPhotos(photos)
+                setNewRemarksPhotos([])
             }
+
+            // Fetch order payment data
+            const paymentResponse = await axios.get(`/order/admin/${orderID}/payment`)
+            const payments = paymentResponse.data?.data || []
+            setOrderPayment(payments)
+
+            // Fetch affiliate commission data
+            try {
+                const affResponse = await axios.get(`/affiliate/admin/order-commission/${orderID}`)
+                if (affResponse.data?.success && affResponse.data?.data) {
+                    setAffiliateCommission(affResponse.data.data)
+                }
+            } catch (affErr) {
+                // Silently ignore — order may have no affiliate
+            }
+        } catch (e) {
+            console.error(e)
+        } finally {
+            setLoading(false)
         }
+    }
+
+    useEffect(() => {
         fetchOrder()
     }, [orderID])
 
@@ -146,6 +149,7 @@ export default function OrderDetails({ params }) {
                 setIsDispatched(true)
                 setShowDispatchModal(false)
                 alert('Order marked as Dispatched successfully!')
+                fetchOrder()
             } else {
                 alert(response.data?.message || 'Failed to dispatch order')
             }
@@ -163,6 +167,7 @@ export default function OrderDetails({ params }) {
             const response = await axios.post(`/order/admin/${orderID}/send-dispatch-sms`)
             if (response.data?.success) {
                 alert(response.data?.message || 'Dispatch SMS sent successfully!')
+                fetchOrder()
             } else {
                 alert(response.data?.message || 'Failed to send dispatch SMS')
             }
@@ -828,6 +833,17 @@ export default function OrderDetails({ params }) {
                                                 <span className="px-2 sm:px-3 py-2 text-xs sm:text-sm font-semibold rounded-full bg-blue-100 text-blue-800 flex items-center gap-1">
                                                     📦 Dispatched
                                                 </span>
+                                                {smsStatus && (
+                                                    <span className={`px-2 py-1 text-[11px] font-bold uppercase rounded border ${
+                                                        smsStatus === 'Delivered' 
+                                                            ? 'bg-green-50 text-green-700 border-green-200' 
+                                                            : smsStatus === 'Submitted' || smsStatus === 'Sent' || smsStatus === 'Pending'
+                                                            ? 'bg-yellow-50 text-yellow-700 border-yellow-200' 
+                                                            : 'bg-red-50 text-red-700 border-red-200'
+                                                    }`} title="SMS Delivery Status from SMSGatewayHub">
+                                                        SMS: {smsStatus}
+                                                    </span>
+                                                )}
                                                 <button
                                                     onClick={handleResendDispatchSMS}
                                                     disabled={dispatching}
