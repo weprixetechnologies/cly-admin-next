@@ -134,8 +134,8 @@ export default function OrderDetails({ params }) {
 
     const handleDispatchOrder = async (e) => {
         e.preventDefault()
-        if (!trackingLink) {
-            alert('Tracking Link is required')
+        if (!trackingLink && !awbNumber) {
+            alert('Either AWB Number / Tracking Code or Tracking Link is required to dispatch.')
             return
         }
         try {
@@ -1069,6 +1069,56 @@ export default function OrderDetails({ params }) {
                     </div>
                 </div>
 
+                {/* Dispatch Details */}
+                {isDispatched && (
+                    <div className="bg-white rounded-lg shadow border border-blue-100">
+                        <div className="p-6 border-b bg-blue-50/50 flex items-center justify-between">
+                            <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                                📦 Dispatch Details
+                            </h2>
+                        </div>
+                        <div className="p-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
+                                <div>
+                                    <div className="text-gray-500 text-xs uppercase tracking-wider mb-1">Courier Company</div>
+                                    <div className="font-semibold text-gray-900">{companyName || '-'}</div>
+                                </div>
+                                <div>
+                                    <div className="text-gray-500 text-xs uppercase tracking-wider mb-1">AWB Number / Tracking Code</div>
+                                    <div className="font-mono font-semibold text-gray-900">{awbNumber || '-'}</div>
+                                </div>
+                                <div>
+                                    <div className="text-gray-500 text-xs uppercase tracking-wider mb-1">Tracking Link</div>
+                                    {trackingLink ? (
+                                        <a 
+                                            href={trackingLink} 
+                                            target="_blank" 
+                                            rel="noopener noreferrer" 
+                                            className="text-blue-600 hover:text-blue-800 underline font-medium break-all"
+                                        >
+                                            Track Shipment ↗
+                                        </a>
+                                    ) : (
+                                        <div className="text-gray-500">-</div>
+                                    )}
+                                </div>
+                                <div>
+                                    <div className="text-gray-500 text-xs uppercase tracking-wider mb-1">SMS Delivery Status</div>
+                                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full uppercase ${
+                                        smsStatus === 'Delivered' 
+                                            ? 'bg-green-100 text-green-800' 
+                                            : smsStatus === 'Submitted' || smsStatus === 'Sent' || smsStatus === 'Pending'
+                                            ? 'bg-yellow-100 text-yellow-800' 
+                                            : 'bg-red-100 text-red-800'
+                                    }`}>
+                                        {smsStatus || 'Not Sent'}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 {/* Affiliate Commission Section */}
                 {affiliateCommission && (
                     <div className="bg-white rounded-lg shadow">
@@ -1870,11 +1920,10 @@ export default function OrderDetails({ params }) {
                             <div className="px-4 py-4 space-y-4">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Tracking Link <span className="text-red-500">*</span>
+                                        Tracking Link (Optional)
                                     </label>
                                     <input
                                         type="url"
-                                        required
                                         value={trackingLink}
                                         onChange={(e) => setTrackingLink(e.target.value)}
                                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
