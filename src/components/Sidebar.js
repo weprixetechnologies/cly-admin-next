@@ -202,7 +202,8 @@ const Sidebar = ({ isOpen, onClose }) => {
                 { name: 'Moderation Queue', href: '/reviews/moderation' },
                 { name: 'All Reviews', href: '/reviews/all' },
                 { name: 'Abuse Reports', href: '/reviews/reports' },
-                { name: 'Analytics', href: '/reviews/analytics' }
+                { name: 'Analytics', href: '/reviews/analytics' },
+                { name: 'Website Reviews', href: '/reviews/website' }
             ]
         },
         {
