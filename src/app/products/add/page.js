@@ -17,7 +17,8 @@ export default function AddProduct() {
         categoryName: '',
         themeCategory: '',
         inventory: '0',
-        status: 'active'
+        status: 'active',
+        seoName: ''
     });
     const [featuredImage, setFeaturedImage] = useState(null);
     const [galleryImages, setGalleryImages] = useState([]);
@@ -199,6 +200,7 @@ export default function AddProduct() {
                 categoryName: formData.categoryName,
                 themeCategory: formData.themeCategory || null,
                 inventory: formData.inventory,
+                seoName: formData.seoName,
                 featuredImages: featuredImageUrl,
                 galleryImages: galleryImageUrls
             };
@@ -278,6 +280,21 @@ export default function AddProduct() {
                                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                                     placeholder="Enter product name"
                                     required
+                                />
+                            </div>
+
+                            <div>
+                                <label htmlFor="seoName" className="block text-sm font-medium text-slate-700 mb-2">
+                                    SEO Name
+                                </label>
+                                <input
+                                    type="text"
+                                    id="seoName"
+                                    name="seoName"
+                                    value={formData.seoName}
+                                    onChange={handleInputChange}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-black"
+                                    placeholder="Enter SEO name (optional)"
                                 />
                             </div>
 

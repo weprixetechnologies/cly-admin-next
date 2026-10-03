@@ -18,7 +18,8 @@ export default function EditProduct() {
         themeCategory: '',
         inventory: '0',
         status: 'active',
-        isFeatured: false
+        isFeatured: false,
+        seoName: ''
     });
     const [featuredImage, setFeaturedImage] = useState(null);
     const [galleryImages, setGalleryImages] = useState([]);
@@ -68,7 +69,8 @@ export default function EditProduct() {
                     themeCategory: product.themeCategory || '',
                     inventory: product.inventory || '0',
                     status: product.status || 'active',
-                    isFeatured: product.isFeatured === 1 || product.isFeatured === true
+                    isFeatured: product.isFeatured === 1 || product.isFeatured === true,
+                    seoName: product.seoName || ''
                 });
 
                 // Store original category ID for count updates
@@ -289,6 +291,7 @@ export default function EditProduct() {
                 inventory: formData.inventory,
                 status: formData.status,
                 isFeatured: formData.isFeatured,
+                seoName: formData.seoName,
                 featuredImages: featuredImageUrl,
                 galleryImages: galleryImageUrls
             };
@@ -362,6 +365,21 @@ export default function EditProduct() {
                                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 text-black focus:border-transparent outline-none"
                                     placeholder="Enter product name"
                                     required
+                                />
+                            </div>
+
+                            <div>
+                                <label htmlFor="seoName" className="block text-sm font-medium text-slate-700 mb-2">
+                                    SEO Name
+                                </label>
+                                <input
+                                    type="text"
+                                    id="seoName"
+                                    name="seoName"
+                                    value={formData.seoName}
+                                    onChange={handleInputChange}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 text-black focus:border-transparent outline-none"
+                                    placeholder="Enter SEO name (optional)"
                                 />
                             </div>
 
@@ -667,21 +685,41 @@ export default function EditProduct() {
                         )}
 
                         {/* Submit Button */}
-                        <div className="flex justify-end space-x-4">
+                        <div className="flex justify-between items-center mt-6">
                             <button
                                 type="button"
-                                onClick={() => router.push('/products/list')}
-                                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 text-black focus:border-transparent"
+                                onClick={async () => {
+                                    try {
+                                        const res = await axiosInstance.put(`/products/${productID}/regenerate-slug`);
+                                        if (res.data.success) {
+                                            setSuccess('Slug regenerated successfully: ' + res.data.slug);
+                                        } else {
+                                            setError('Failed to regenerate slug: ' + res.data.message);
+                                        }
+                                    } catch (err) {
+                                        setError('Failed to regenerate slug');
+                                    }
+                                }}
+                                className="px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 focus:ring-2 focus:ring-yellow-500 text-black focus:border-transparent transition-colors"
                             >
-                                Cancel
+                                Regenerate Slug
                             </button>
-                            <button
-                                type="submit"
-                                disabled={isLoading}
-                                className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 text-black focus:border-transparent disabled:bg-blue-400"
-                            >
-                                {isLoading ? 'Updating Product...' : 'Update Product'}
-                            </button>
+                            <div className="flex space-x-4">
+                                <button
+                                    type="button"
+                                    onClick={() => router.push('/products/list')}
+                                    className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 text-black focus:border-transparent"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={isLoading}
+                                    className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 text-black focus:border-transparent disabled:bg-blue-400"
+                                >
+                                    {isLoading ? 'Updating Product...' : 'Update Product'}
+                                </button>
+                            </div>
                         </div>
                     </form>
                 </div>
